@@ -1,0 +1,22 @@
+{
+  "ServerID": 100,
+  "Name": "proxy server",
+  "Host": "0.0.0.0",
+  "TCPPort": 7000,
+
+  "Version": "V0.1",
+  "MaxConn": 1000,
+  "MaxPacketSize": 4096,
+
+  "WorkerPoolSize": 16,
+  "MaxWorkerTaskLen": 2048,
+
+  "MaxMsgChanLen": 2048,
+
+  "LogDir": "/sdadata/item/proxyserver/log",
+  "LogFile": "zinx.log",
+
+  "MaxConnReadTime":  40,
+  "MaxConnWriteTime": 50,
+  "HeartbeatMax": 0
+}

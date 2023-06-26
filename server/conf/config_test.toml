@@ -1,0 +1,5 @@
+# this is a toml config
+
+httpHost = "0.0.0.0"
+httpPort = 6000
+httpServerHost = "http://localhost:8080/test"

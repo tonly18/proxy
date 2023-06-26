@@ -1,0 +1,10 @@
+# this is a toml config
+
+httpHost = "0.0.0.0"
+httpPort = 6000
+gameServerHost = "http://127.0.0.1:8080/"
+gameServerCommandAPI = "n/v1/common"
+gameServerOnOffLineAPI = "n/v1/usercount"
+gameServerDoLoginAPI = "n/v1/do/login"
+
+gameServerPHPCommandAPI = "http://192.168.1.30:8084/"
