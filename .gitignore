@@ -26,6 +26,3 @@ tmp
 server/tmp
 server/log/*.log
 server/proxy
-client/*.go
-shell/*.bat
-shell/*.sh
