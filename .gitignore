@@ -19,3 +19,15 @@
 
 # Go workspace file
 go.work
+
+.git
+.idea
+tmp
+server/tmp
+server/log/*.log
+server/conf/config_local.toml
+server/conf/zinx_local.json
+server/proxy
+client/*.go
+shell/*.bat
+shell/*.sh
