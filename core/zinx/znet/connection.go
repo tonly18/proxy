@@ -97,7 +97,7 @@ func (c *Connection) StartWriter() {
 				//有数据要写给客户端
 				if _, err := c.Conn.Write(data); err != nil {
 					zlog.Error("[Conn Write] Send Buff Data Error:", err, ", Conn Writer exit")
-					return
+					break
 				}
 			} else {
 				zlog.Error("[Conn Write] MsgBuffChan is Closed!]")
