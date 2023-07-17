@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cast"
 	"net/http"
 	"proxy/core/server"
+	"proxy/core/zinx/ziface"
 	"proxy/library/logger"
 	"proxy/server/global"
 	"runtime"
@@ -56,23 +57,28 @@ func WrapHandle(handler func(*server.Request) *server.Response) func(http.Respon
 			return
 		}
 
-		//获取userId玩家conn
-		conn, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(cast.ToUint64(userId))
-		if err != nil {
-			writeResponseData(w, &server.Response{Code: 1005})
-			return
-		}
-		if conn.GetProxyId() != cast.ToUint32(proxyId) {
-			writeResponseData(w, &server.Response{Code: 1010})
-			return
-		}
-		if conn.GetServerId() != cast.ToUint32(serverId) {
-			writeResponseData(w, &server.Response{Code: 1012})
-			return
-		}
-		if conn.GetUserId() != cast.ToUint64(userId) {
-			writeResponseData(w, &server.Response{Code: 1015})
-			return
+		//获取当前玩家conn
+		var conn ziface.IConnection
+		uid := cast.ToUint64(userId)
+		if uid > 0 {
+			connection, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(uid)
+			if err != nil {
+				writeResponseData(w, &server.Response{Code: 1005})
+				return
+			}
+			if connection.GetProxyId() != cast.ToUint32(proxyId) {
+				writeResponseData(w, &server.Response{Code: 1010})
+				return
+			}
+			if connection.GetServerId() != cast.ToUint32(serverId) {
+				writeResponseData(w, &server.Response{Code: 1012})
+				return
+			}
+			if connection.GetUserId() != cast.ToUint64(userId) {
+				writeResponseData(w, &server.Response{Code: 1015})
+				return
+			}
+			conn = connection
 		}
 
 		//request
@@ -80,7 +86,7 @@ func WrapHandle(handler func(*server.Request) *server.Response) func(http.Respon
 			ResponseWriter: w,
 			Request:        r,
 			PlayerID:       playerIds,
-			UserID:         cast.ToUint64(userId),
+			UserID:         uid,
 			Conn:           conn,
 			Data:           make(map[string]any, 10),
 		}
