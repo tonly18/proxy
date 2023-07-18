@@ -62,23 +62,9 @@ func WrapHandle(handler func(*server.Request) *server.Response) func(http.Respon
 		uid := cast.ToUint64(userId)
 		if uid > 0 {
 			connection, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(uid)
-			if err != nil {
-				writeResponseData(w, &server.Response{Code: 1005})
-				return
+			if err == nil && connection != nil {
+				conn = connection
 			}
-			if connection.GetProxyId() != cast.ToUint32(proxyId) {
-				writeResponseData(w, &server.Response{Code: 1010})
-				return
-			}
-			if connection.GetServerId() != cast.ToUint32(serverId) {
-				writeResponseData(w, &server.Response{Code: 1012})
-				return
-			}
-			if connection.GetUserId() != cast.ToUint64(userId) {
-				writeResponseData(w, &server.Response{Code: 1015})
-				return
-			}
-			conn = connection
 		}
 
 		//request
