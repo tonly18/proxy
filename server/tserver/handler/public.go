@@ -25,7 +25,7 @@ func (h *PublicRouter) Handle(request ziface.IRequest) error {
 	start := time.Now()
 
 	//判断玩家是否登录
-	userid := request.GetConnection().GetUserId() //玩家ID
+	userid := request.GetConnection().GetUserId() //当前玩家ID
 	if userid == 0 {
 		return errors.New("[Public Handle] player not login")
 	}
@@ -102,13 +102,13 @@ func (h *PublicRouter) Handle(request ziface.IRequest) error {
 		}
 	}
 	for _, v := range playerIds {
-		conn, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(v)
+		connection, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(v)
 		if err != nil { //玩家不存在
 			logger.Errorf(request, `[Public Handle] player not exist. userId:%v, error:%v`, v, err)
 			continue
 		}
-		if err := conn.SendByteMsg(downRawData); err != nil {
-			logger.Errorf(request, "[Public Handle] conn.SendByteMsg. userId:%v, error:%v", v, err)
+		if err := connection.SendByteMsg(downRawData); err != nil {
+			logger.Errorf(request, "[Public Handle] connection.SendByteMsg. userId:%v, error:%v", v, err)
 			continue
 		}
 	}

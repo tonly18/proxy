@@ -128,12 +128,16 @@ func (connMgr *ConnManager) AddConnByUserId(conn ziface.IConnection) error {
 	//未登录
 	if conn.GetUserId() < 1 {
 		conn.Stop()
-		return fmt.Errorf(`conn player not login, donot add to players. user id:%v`, conn.GetUserId())
+		return fmt.Errorf(`conn manager player not login, donot add to players. user id:%v`, conn.GetUserId())
 	}
 	//已经添加到players
 	if _, ok := connMgr.players[conn.GetUserId()]; ok {
 		conn.Stop()
 		return fmt.Errorf(`conn manager player already exists. user id:%v`, conn.GetUserId())
+	}
+	//是否已添加到connections
+	if _, ok := connMgr.connections[conn.GetConnID()]; !ok {
+		connMgr.connections[conn.GetConnID()] = conn
 	}
 	//已经登录时,则添加到players
 	connMgr.players[conn.GetUserId()] = conn.GetConnID()
@@ -162,7 +166,20 @@ func (connMgr *ConnManager) RemoveConnByUserId(conn ziface.IConnection) {
 //PlayerLen 获取当前连接
 func (connMgr *ConnManager) PlayerLen() int {
 	connMgr.connLock.RLock()
+	//在线人数
 	length := len(connMgr.players)
+
+	//修正数据不一致
+	if length > len(connMgr.connections) {
+		for uid, connId := range connMgr.players {
+			if _, ok := connMgr.connections[connId]; !ok {
+				delete(connMgr.players, uid)
+			}
+		}
+		length = len(connMgr.players)
+	}
+
 	connMgr.connLock.RUnlock()
+
 	return length
 }

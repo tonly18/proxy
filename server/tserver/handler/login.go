@@ -72,7 +72,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 
 	//添加登录后的玩家到connManager
 	if connection, err := conn.GetTCPServer().GetConnMgr().GetConnByUserId(userId); err == nil {
-		//踢掉原connection
+		//踢掉原connection,并推送消息给客户端
 		downMsg := pack.NewMessageKickOut(global.CMD_DOWN_KICK_OUT, 5)
 		pb := pack.NewDataPackKickOut()
 		if downData, err := pb.Pack(downMsg); err != nil {

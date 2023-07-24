@@ -58,7 +58,9 @@ func (r *Request) Value(key any) any {
 	if command.IsValueNil(value) {
 		value = r.Request.Context().Value(key)
 		if command.IsValueNil(value) {
-			value = r.Conn.GetProperty(cast.ToString(key))
+			if r.Conn != nil {
+				value = r.Conn.GetProperty(cast.ToString(key))
+			}
 		}
 	}
 
