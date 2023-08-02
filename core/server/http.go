@@ -31,7 +31,7 @@ func NewHttpServer(config *HttpServerConfig) *httpServer {
 }
 
 func (s *httpServer) Start() error {
-	fmt.Printf("[HTTP SERVER START] SERVER IS STARTING AT HOST: %s, PORT: %d\n", config.HttpConfig.HttpHost, config.HttpConfig.HttpPort)
+	fmt.Printf("[HTTP SERVER START] Successful. Listening at IP: %s PORT: %d\n", config.HttpConfig.HttpHost, config.HttpConfig.HttpPort)
 
 	return s.Http.ListenAndServe()
 }

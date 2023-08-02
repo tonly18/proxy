@@ -75,8 +75,6 @@ func (s *Server) StartConn(conn ziface.IConnection) {
 
 //Start 开启网络服务
 func (s *Server) Start() {
-	fmt.Printf("[TCP SERVER START] Server Name: %s, Listenner at IP: %s, Port %d is Starting\n", s.Name, s.IP, s.Port)
-
 	//0 启动worker工作池机制
 	s.msgHandler.StartWorkerPool()
 
@@ -91,7 +89,7 @@ func (s *Server) Start() {
 	if err != nil {
 		panic(fmt.Sprintf(`[TCP SERVER START] net Listen Tcp Error: %v`, err))
 	}
-	fmt.Println("[TCP SERVER START] Server:", s.Name, "Successful, Now Listening...")
+	fmt.Printf("[TCP SERVER START] Successful. Listening at IP: %s Port %d\n", s.IP, s.Port)
 
 	//开启一个go去做服务端Linster业务
 	go func() {
@@ -182,7 +180,6 @@ func (s *Server) SetOnConnStop(hookFunc func(ziface.IConnection)) {
 //CallOnConnStart 调用连接OnConnStart Hook函数
 func (s *Server) CallOnConnStart(conn ziface.IConnection) {
 	if s.OnConnStart != nil {
-		//fmt.Println("---> CallOnConnStart....")
 		s.OnConnStart(conn)
 	}
 }

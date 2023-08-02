@@ -8,7 +8,7 @@ import (
 	"proxy/server/library/httpclient"
 )
 
-//上线
+//OnConnStartFunc 上线
 func OnConnStartFunc(conn ziface.IConnection) {
 	//玩家在线数
 	userOnLineNumber := conn.GetTCPServer().GetConnMgr().Len()
@@ -27,23 +27,25 @@ func OnConnStartFunc(conn ziface.IConnection) {
 	}).Do()
 	if err != nil {
 		logger.Error(context.Background(), "[OnConnStartFunc] player on line error: ", err, ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
-		return
 	}
 	if resp.GetHeaderCode() != 200 {
 		logger.Error(context.Background(), "[OnConnStartFunc] player on line error, code: ", resp.GetHeaderCode(), ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
 	}
+
+	logger.Info(conn, "[OnConnStartFunc] player on line, conn id: ", conn.GetConnID(), ", userId:", conn.GetUserId())
 }
 
-//下线
+//OnConnStopFunc 下线
 func OnConnStopFunc(conn ziface.IConnection) {
-	//删除玩家
+	userOnLineNumber := conn.GetTCPServer().GetConnMgr().Len() //玩家在线数
+	proxyId := conn.GetTCPServer().GetID()
+	serverId := conn.GetServerId()
 	userId := conn.GetUserId()
-	if userId > 0 {
-		conn.GetTCPServer().GetConnMgr().RemoveConnByUserId(conn)
-	}
+	clientId := conn.GetRemoteIP()
+	socketId := conn.GetConnID()
 
-	//玩家在线数
-	userOnLineNumber := conn.GetTCPServer().GetConnMgr().Len()
+	//删除conn
+	conn.Stop()
 
 	//call http server
 	client := httpclient.NewHttpClient(&httpclient.Config{})
@@ -51,19 +53,18 @@ func OnConnStopFunc(conn ziface.IConnection) {
 		"online": userOnLineNumber,
 		"status": 0,
 	}).SetHeader(map[string]any{
-		"proxy_id":  conn.GetTCPServer().GetID(),
-		"server_id": conn.GetServerId(),
-		"user_id":   conn.GetUserId(),
-		"client_ip": conn.GetRemoteIP(),
-		"socket_id": conn.GetConnID(),
+		"proxy_id":  proxyId,
+		"server_id": serverId,
+		"user_id":   userId,
+		"client_ip": clientId,
+		"socket_id": socketId,
 	}).Do()
 	if err != nil {
 		logger.Error(context.Background(), "[OnConnStopFunc] player off line error: ", err, ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
-		return
 	}
 	if resp.GetHeaderCode() != 200 {
 		logger.Error(context.Background(), "[OnConnStopFunc] player off line error, code: ", resp.GetHeaderCode(), ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
 	}
 
-	logger.Info(conn, "[OnConnStopFunc] player off line, user id: ", userId)
+	logger.Info(conn, "[OnConnStopFunc] player off line, conn id: ", socketId, ", userId:", userId)
 }

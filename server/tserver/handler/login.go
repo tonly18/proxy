@@ -83,7 +83,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 				return err
 			}
 		}
-		connection.GetTCPServer().GetConnMgr().RemoveConnByUserId(connection)
+		connection.Stop()
 	}
 
 	//把conn添加到players

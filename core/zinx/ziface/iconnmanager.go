@@ -25,6 +25,5 @@ type IConnManager interface {
 
 	GetConnByUserId(uint64) (IConnection, error)
 	AddConnByUserId(IConnection) error
-	RemoveConnByUserId(IConnection)
 	PlayerLen() int //获取当前玩家
 }

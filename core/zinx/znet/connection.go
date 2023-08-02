@@ -31,9 +31,12 @@ type Connection struct {
 	//有缓冲管道，用于读、写两个goroutine之间的消息通信
 	msgBuffChan chan []byte
 
-	sync.RWMutex
+	//用户发消息的Lock
+	msgLock sync.RWMutex
 	//链接属性
 	property map[string]any
+	//玩家ID
+	userId uint64
 	//保护当前property的锁
 	propertyLock sync.Mutex
 	//当前连接的关闭状态
@@ -258,8 +261,8 @@ func (c *Connection) GetRemotePort() string {
 
 //SendMsg 直接将Message数据发送数据给远程的TCP客户端
 func (c *Connection) SendMsg(msgID uint32, data []byte) error {
-	c.RLock()
-	defer c.RUnlock()
+	c.msgLock.RLock()
+	defer c.msgLock.RUnlock()
 
 	if c.isClosed == true {
 		return errors.New("connection closed when send msg")
@@ -284,8 +287,8 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 
 //SendBuffMsg  发生BuffMsg
 func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
-	c.RLock()
-	defer c.RUnlock()
+	c.msgLock.RLock()
+	defer c.msgLock.RUnlock()
 
 	idleTimeout := time.NewTimer(10 * time.Millisecond)
 	defer idleTimeout.Stop()
@@ -299,7 +302,7 @@ func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
 	msg, err := dp.Pack(NewMessage(msgID, data))
 	if err != nil {
 		zlog.Error("[Conn SendBuffMsg] Pack error msg ID = ", msgID, " Err: ", err)
-		return errors.New("Pack error msg")
+		return errors.New("pack error msg")
 	}
 
 	// 发送超时
@@ -319,8 +322,8 @@ func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
 //SendByteMsg  发生BuffMsg
 func (c *Connection) SendByteMsg(data []byte) error {
 	//lock
-	c.RLock()
-	defer c.RUnlock()
+	c.msgLock.RLock()
+	defer c.msgLock.RUnlock()
 
 	//time out
 	idleTimeout := time.NewTimer(10 * time.Millisecond)
@@ -397,33 +400,37 @@ func (c *Connection) GetUIN() uint64 {
 
 //SetUserId 玩家ID
 func (c *Connection) SetUserId(userId uint64) {
-	c.SetProperty("user_id", userId)
+	c.userId = userId
 }
 func (c *Connection) GetUserId() uint64 {
-	return cast.ToUint64(c.GetProperty("user_id"))
+	return c.userId
 }
 
 func (c *Connection) finalizer() {
+	c.msgLock.Lock()
+	defer c.msgLock.Unlock()
+
+	//如果用户注册了该链接的关闭回调业务,那么在此刻应该显示调用
+	c.TCPServer.CallOnConnStop(c)
+
 	//如果当前链接已经关闭
 	if c.isClosed == true {
 		return
 	}
 
-	c.Lock()
-	defer c.Unlock()
-
 	//停止心跳检测器
 	if c.hc != nil {
 		c.hc.Stop()
 	}
-	//如果用户注册了该链接的关闭回调业务,那么在此刻应该显示调用
-	c.TCPServer.CallOnConnStop(c)
+
 	//关闭socket链接
 	c.Conn.Close()
 	//将链接从连接管理器中删除
 	c.TCPServer.GetConnMgr().Remove(c)
 	//关闭该链接全部管道
-	close(c.msgBuffChan)
+	if c.msgBuffChan != nil {
+		close(c.msgBuffChan)
+	}
 	//设置标志位
 	c.isClosed = true
 

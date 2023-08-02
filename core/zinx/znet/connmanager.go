@@ -42,8 +42,6 @@ func (connMgr *ConnManager) Add(conn ziface.IConnection) {
 func (connMgr *ConnManager) Remove(conn ziface.IConnection) {
 	connMgr.connLock.Lock()
 
-	//停止Conn
-	conn.Stop()
 	//删除连接信息
 	delete(connMgr.connections, conn.GetConnID())
 	//删除players
@@ -135,32 +133,14 @@ func (connMgr *ConnManager) AddConnByUserId(conn ziface.IConnection) error {
 		conn.Stop()
 		return fmt.Errorf(`conn manager player already exists. user id:%v`, conn.GetUserId())
 	}
+	//已经登录时,则添加到players
+	connMgr.players[conn.GetUserId()] = conn.GetConnID()
 	//是否已添加到connections
 	if _, ok := connMgr.connections[conn.GetConnID()]; !ok {
 		connMgr.connections[conn.GetConnID()] = conn
 	}
-	//已经登录时,则添加到players
-	connMgr.players[conn.GetUserId()] = conn.GetConnID()
 
 	return nil
-}
-
-//RemoveConnByUserId 根据玩家ID删除Conn
-func (connMgr *ConnManager) RemoveConnByUserId(conn ziface.IConnection) {
-	connMgr.connLock.RLock()
-	defer connMgr.connLock.RUnlock()
-
-	//从connections移除
-	if connID, ok := connMgr.players[conn.GetUserId()]; ok {
-		if connID == conn.GetConnID() {
-			//停止Conn
-			conn.Stop()
-			//从connections移除
-			delete(connMgr.connections, connID)
-			//从players移除
-			delete(connMgr.players, conn.GetUserId())
-		}
-	}
 }
 
 //PlayerLen 获取当前连接
@@ -170,14 +150,14 @@ func (connMgr *ConnManager) PlayerLen() int {
 	length := len(connMgr.players)
 
 	//修正数据不一致
-	if length > len(connMgr.connections) {
-		for uid, connId := range connMgr.players {
-			if _, ok := connMgr.connections[connId]; !ok {
-				delete(connMgr.players, uid)
-			}
-		}
-		length = len(connMgr.players)
-	}
+	//if length > len(connMgr.connections) {
+	//	for uid, connId := range connMgr.players {
+	//		if _, ok := connMgr.connections[connId]; !ok {
+	//			delete(connMgr.players, uid)
+	//		}
+	//	}
+	//	length = len(connMgr.players)
+	//}
 
 	connMgr.connLock.RUnlock()
 
