@@ -191,7 +191,7 @@ func (c *Connection) Start() {
 	defer func() {
 		zlog.Infof(`[Conn Start] Goroutine is Exit! Addr:%v`, c.GetRemoteAddr())
 		if err := recover(); err != nil {
-			zlog.Infof(`[Conn Start] Goroutine is Exit! Addr:%v, Error:%w`, c.GetRemoteAddr(), err)
+			zlog.Infof(`[Conn Start] Goroutine is Exit! Addr:%v, Error:%v`, c.GetRemoteAddr(), err)
 		}
 	}()
 

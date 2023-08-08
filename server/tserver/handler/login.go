@@ -83,6 +83,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 				return err
 			}
 		}
+		connection.GetTCPServer().GetConnMgr().Remove(connection)
 		connection.Stop()
 	}
 

@@ -45,8 +45,10 @@ func (connMgr *ConnManager) Remove(conn ziface.IConnection) {
 	//删除连接信息
 	delete(connMgr.connections, conn.GetConnID())
 	//删除players
-	if conn.GetConnID() == connMgr.players[conn.GetUserId()] {
-		delete(connMgr.players, conn.GetUserId())
+	if conn.GetUserId() > 0 {
+		if conn.GetConnID() == connMgr.players[conn.GetUserId()] {
+			delete(connMgr.players, conn.GetUserId())
+		}
 	}
 
 	connMgr.connLock.Unlock()
