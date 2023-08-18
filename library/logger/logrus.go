@@ -5,10 +5,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"os"
 	"proxy/core/zinx/zconf"
+	"runtime"
 )
-
-//log file
-var fileLog *os.File
 
 //init
 func init() {
@@ -27,8 +25,8 @@ func initLogrus() {
 	})
 
 	//日志输出
-	if file, err := os.OpenFile(zconf.GlobalObject.LogDir+"/logrus.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err == nil {
-		fileLog = file
+	if fileLog, err := os.OpenFile(zconf.GlobalObject.LogDir+"/logrus.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err == nil {
+		runtime.SetFinalizer(fileLog, FinishClear)
 		logrus.SetOutput(fileLog)
 	} else {
 		logrus.SetOutput(os.Stdout)
@@ -75,7 +73,7 @@ func Infof(ctx context.Context, format string, args ...any) {
 	}).Infof(format, args...)
 }
 
-//关闭文件句柄
-func FinishClear() {
-	fileLog.Close()
+//FinishClear 关闭文件句柄
+func FinishClear(f *os.File) {
+	f.Close()
 }

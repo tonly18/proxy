@@ -134,6 +134,9 @@ func (r *Request) Err() error {
 //Value
 func (r *Request) Value(key any) any {
 	if k, ok := key.(string); ok {
+		if k == "user_id" {
+			return r.conn.GetUserId()
+		}
 		if k == "client_ip" {
 			return r.conn.GetRemoteIP()
 		}

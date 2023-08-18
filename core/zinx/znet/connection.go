@@ -455,6 +455,9 @@ func (c *Connection) Err() error {
 //Value
 func (c *Connection) Value(key any) any {
 	if k, ok := key.(string); ok {
+		if k == "user_id" {
+			return c.GetUserId()
+		}
 		if k == "client_ip" {
 			return c.GetRemoteIP()
 		}

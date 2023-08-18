@@ -1,7 +1,6 @@
 package core
 
 import (
-	"context"
 	"proxy/core/zinx/ziface"
 	"proxy/library/logger"
 	"proxy/server/config"
@@ -26,10 +25,10 @@ func OnConnStartFunc(conn ziface.IConnection) {
 		"socket_id": conn.GetConnID(),
 	}).Do()
 	if err != nil {
-		logger.Error(context.Background(), "[OnConnStartFunc] player on line error: ", err, ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
+		logger.Error(conn, "[OnConnStartFunc] player on line error: ", err, ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
 	}
 	if resp.GetHeaderCode() != 200 {
-		logger.Error(context.Background(), "[OnConnStartFunc] player on line error, code: ", resp.GetHeaderCode(), ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
+		logger.Error(conn, "[OnConnStartFunc] player on line error, code: ", resp.GetHeaderCode(), ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
 	}
 
 	logger.Info(conn, "[OnConnStartFunc] player on line, conn id: ", conn.GetConnID(), ", userId:", conn.GetUserId())
@@ -60,10 +59,10 @@ func OnConnStopFunc(conn ziface.IConnection) {
 		"socket_id": socketId,
 	}).Do()
 	if err != nil {
-		logger.Error(context.Background(), "[OnConnStopFunc] player off line error: ", err, ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
+		logger.Error(conn, "[OnConnStopFunc] player off line error: ", err, ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
 	}
 	if resp.GetHeaderCode() != 200 {
-		logger.Error(context.Background(), "[OnConnStopFunc] player off line error, code: ", resp.GetHeaderCode(), ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
+		logger.Error(conn, "[OnConnStopFunc] player off line error, code: ", resp.GetHeaderCode(), ", api: ", config.HttpConfig.GameServerOnOffLineAPI)
 	}
 
 	logger.Info(conn, "[OnConnStopFunc] player off line, conn id: ", socketId, ", userId:", userId)

@@ -3,7 +3,7 @@ package znet
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
+	"fmt"
 	"proxy/core/zinx/zconf"
 	"proxy/core/zinx/ziface"
 )
@@ -63,7 +63,7 @@ func (dp *MessagePack) UnPack(binaryData []byte) (ziface.IMessage, error) {
 
 	//判断dataLen的长度是否超出我们允许的最大包长度
 	if zconf.GlobalObject.MaxPacketSize > 0 && msg.MsgLen > zconf.GlobalObject.MaxPacketSize {
-		return nil, errors.New("too large msg data received")
+		return nil, fmt.Errorf(`too large msg data received: %d`, msg.MsgLen)
 	}
 
 	return msg, nil

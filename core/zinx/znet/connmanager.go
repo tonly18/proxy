@@ -127,12 +127,10 @@ func (connMgr *ConnManager) AddConnByUserId(conn ziface.IConnection) error {
 
 	//未登录
 	if conn.GetUserId() < 1 {
-		conn.Stop()
 		return fmt.Errorf(`conn manager player not login, donot add to players. user id:%v`, conn.GetUserId())
 	}
 	//已经添加到players
 	if _, ok := connMgr.players[conn.GetUserId()]; ok {
-		conn.Stop()
 		return fmt.Errorf(`conn manager player already exists. user id:%v`, conn.GetUserId())
 	}
 	//已经登录时,则添加到players

@@ -104,18 +104,18 @@ func (h *PublicRouter) Handle(request ziface.IRequest) error {
 	for _, v := range playerIds {
 		connection, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(v)
 		if err != nil { //玩家不存在
-			logger.Errorf(request, `[Public Handle] player not exist. userId:%v, error:%v`, v, err)
+			logger.Errorf(request, `[Public Handle] player not exist. userId:%v, length:%d, error:%v`, v, len(downRawData), err)
 			continue
 		}
 		if err := connection.SendByteMsg(downRawData); err != nil {
-			logger.Errorf(request, "[Public Handle] connection.SendByteMsg. userId:%v, error:%v", v, err)
+			logger.Errorf(request, `[Public Handle] connection.SendByteMsg. userId:%v, length:%d, error:%v`, v, len(downRawData), err)
 			continue
 		}
 	}
 
 	//结束时间(毫秒)
 	end := time.Since(start).Milliseconds()
-	logger.Infof(request, `[Status Code:%d | MsgID:%d | Execution Time:%d(ms)]`, resp.GetHeaderCode(), request.GetMsgID(), end)
+	logger.Infof(request, `[Status Code:%d | MsgID:%d | Length:%d | Execution Time:%d(ms)]`, resp.GetHeaderCode(), request.GetMsgID(), len(downRawData), end)
 
 	//return
 	return nil
