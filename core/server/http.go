@@ -12,12 +12,6 @@ type httpServer struct {
 	Http http.Server
 }
 
-type HttpServerConfig struct {
-	IP      string
-	Port    int
-	Handler http.Handler
-}
-
 func NewHttpServer(config *HttpServerConfig) *httpServer {
 	return &httpServer{
 		Http: http.Server{
