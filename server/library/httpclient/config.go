@@ -7,8 +7,9 @@ import (
 )
 
 type Config struct {
-	Transport http.RoundTripper
-	TimeOut   time.Duration
+	CheckRedirect func(req *http.Request, via []*http.Request) error
+	Jar           http.CookieJar
+	TimeOut       time.Duration
 }
 
 var transport = &http.Transport{
