@@ -18,13 +18,13 @@ var HttpConfig *httpConfigStruck = &httpConfigStruck{}
 
 //init
 func init() {
-	if err := getConfig(); err != nil {
+	if err := LoadProxyConfig(); err != nil {
 		panic(err)
 	}
 }
 
 //获取config配置文件
-func getConfig() error {
+func LoadProxyConfig() error {
 	if HttpConfig.HttpPort == 0 {
 		if err := loadConfigFile("config", HttpConfig); err != nil {
 			return err

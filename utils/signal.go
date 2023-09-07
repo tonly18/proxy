@@ -2,9 +2,11 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"proxy/core/zinx/zconf"
+	"proxy/server/config"
 	"syscall"
 	"time"
 )
@@ -35,15 +37,24 @@ func (s *Signal) Waiter() error {
 
 	for s := range s.sigChan {
 		switch s {
-		case syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
+		case syscall.SIGINT:
+			//ctrl + c
+			//fmt.Println("control signal int:", s)
+			return nil
+		case syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
 			//fmt.Println("Program Exit...", s)
 			return nil
 		case syscall.SIGUSR1:
 			//fmt.Println("usr1 signal", s)
 			return nil
 		case syscall.SIGUSR2:
-			//fmt.Println("usr2 signal", s)
-			return nil
+			//重新加载proxy配置文件
+			if err := config.LoadProxyConfig(); err != nil {
+				fmt.Println("reload proxy config file error:", err)
+			} else {
+				fmt.Println("reload proxy config file successfully")
+			}
+			continue
 		default:
 			//fmt.Println("other signal", s)
 		}
