@@ -3,11 +3,11 @@ package handler
 import (
 	"fmt"
 	"github.com/spf13/cast"
+	"github.com/tonly18/httpclient"
 	"proxy/core/zinx/ziface"
 	"proxy/library/logger"
 	"proxy/server/config"
 	"proxy/server/global"
-	"proxy/server/library/httpclient"
 	"proxy/server/utils/pack"
 	"time"
 )

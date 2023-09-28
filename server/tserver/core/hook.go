@@ -1,10 +1,10 @@
 package core
 
 import (
+	"github.com/tonly18/httpclient"
 	"proxy/core/zinx/ziface"
 	"proxy/library/logger"
 	"proxy/server/config"
-	"proxy/server/library/httpclient"
 )
 
 //OnConnStartFunc 上线
