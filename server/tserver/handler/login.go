@@ -43,23 +43,25 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	resp, err := client.NewRequest("POST", gameServerDoLoginApi, request.GetData()).SetHeader(map[string]any{
 		"Content-Type": "application/octet-stream",
 		"proxy_id":     request.GetConnection().GetTCPServer().GetID(),
-		"trace_id":     request.GetTraceId(),
+		"server_id":    0,
+		"user_id":      0,
 		"client_ip":    request.GetConnection().GetRemoteIP(),
-		"socket_id":    request.GetConnection().GetConnID(),
+		"trace_id":     request.GetTraceId(),
 	}).Do()
 	if err != nil {
 		return fmt.Errorf(`login call http server is error: %v`, err)
 	}
+	request.SetAargs("gameserver_id", resp.GetDataFromHeader("gameserver_id")) //game server id
 	if resp.GetHeaderCode() != 200 {
 		return fmt.Errorf(`login call http server is code:%v`, resp.Response.StatusCode)
 	}
 
 	//处理返回数据
-	uin := cast.ToUint64(resp.Response.Header.Get("uin"))            //帐号ID(一个帐号ID对应多个玩家ID)
-	userId := cast.ToUint64(resp.Response.Header.Get("user_id"))     //玩家ID
-	serverId := cast.ToUint32(resp.Response.Header.Get("server_id")) //区服ID
+	uin := cast.ToUint64(resp.GetDataFromHeader("uin"))            //帐号ID(一个帐号ID对应多个玩家ID)
+	userId := cast.ToUint64(resp.GetDataFromHeader("user_id"))     //玩家ID
+	serverId := cast.ToUint32(resp.GetDataFromHeader("server_id")) //区服ID
 	if uin == 0 || userId == 0 || serverId == 0 {
-		logger.Error(request, "[login handler] login fail")
+		logger.Error(request, "[login handler] login fail.")
 		return err
 	}
 
@@ -79,7 +81,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 			logger.Errorf(request, `[login handler] connection.SendByteMsg pack. error:%v`, err)
 		} else {
 			if err := connection.SendByteMsg(downData); err != nil {
-				logger.Errorf(request, `[login handler] connection.SendByteMsg error: %v`, err)
+				logger.Errorf(request, `[login handler] connection.SendByteMsg. error: %v`, err)
 				return err
 			}
 		}
@@ -89,7 +91,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 
 	//把conn添加到players
 	if err := conn.GetTCPServer().GetConnMgr().AddConnByUserId(conn); err != nil {
-		logger.Errorf(request, `[login handler] GetConnMgr.AddConnByUserId error: %v`, err)
+		logger.Errorf(request, `[login handler] GetConnMgr.AddConnByUserId. error: %v`, err)
 		return err
 	}
 

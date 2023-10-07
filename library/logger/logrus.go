@@ -36,40 +36,44 @@ func initLogrus() {
 //Error
 func Error(ctx context.Context, args ...any) {
 	logrus.WithFields(logrus.Fields{
-		"TraceId":  ctx.Value("trace_id"),
-		"ProxyId":  ctx.Value("proxy_id"),
-		"ServerId": ctx.Value("server_id"),
-		"UserId":   ctx.Value("user_id"),
-		"IP":       ctx.Value("client_ip"),
+		"gameServerId": ctx.Value("gameserver_id"),
+		"ProxyId":      ctx.Value("proxy_id"),
+		"ServerId":     ctx.Value("server_id"),
+		"UserId":       ctx.Value("user_id"),
+		"IP":           ctx.Value("client_ip"),
+		"TraceId":      ctx.Value("trace_id"),
 	}).Error(args...)
 }
 func Errorf(ctx context.Context, format string, args ...any) {
 	logrus.WithFields(logrus.Fields{
-		"TraceId":  ctx.Value("trace_id"),
-		"ProxyId":  ctx.Value("proxy_id"),
-		"ServerId": ctx.Value("server_id"),
-		"UserId":   ctx.Value("user_id"),
-		"IP":       ctx.Value("client_ip"),
+		"gameServerId": ctx.Value("gameserver_id"),
+		"ProxyId":      ctx.Value("proxy_id"),
+		"ServerId":     ctx.Value("server_id"),
+		"UserId":       ctx.Value("user_id"),
+		"IP":           ctx.Value("client_ip"),
+		"TraceId":      ctx.Value("trace_id"),
 	}).Errorf(format, args...)
 }
 
 //Info
 func Info(ctx context.Context, args ...any) {
 	logrus.WithFields(logrus.Fields{
-		"TraceId":  ctx.Value("trace_id"),
-		"ProxyId":  ctx.Value("proxy_id"),
-		"ServerId": ctx.Value("server_id"),
-		"UserId":   ctx.Value("user_id"),
-		"IP":       ctx.Value("client_ip"),
+		"gameServerId": ctx.Value("gameserver_id"),
+		"ProxyId":      ctx.Value("proxy_id"),
+		"ServerId":     ctx.Value("server_id"),
+		"UserId":       ctx.Value("user_id"),
+		"IP":           ctx.Value("client_ip"),
+		"TraceId":      ctx.Value("trace_id"),
 	}).Info(args...)
 }
 func Infof(ctx context.Context, format string, args ...any) {
 	logrus.WithFields(logrus.Fields{
-		"TraceId":  ctx.Value("trace_id"),
-		"ProxyId":  ctx.Value("proxy_id"),
-		"ServerId": ctx.Value("server_id"),
-		"UserId":   ctx.Value("user_id"),
-		"IP":       ctx.Value("client_ip"),
+		"gameServerId": ctx.Value("gameserver_id"),
+		"ProxyId":      ctx.Value("proxy_id"),
+		"ServerId":     ctx.Value("server_id"),
+		"UserId":       ctx.Value("user_id"),
+		"IP":           ctx.Value("client_ip"),
+		"TraceId":      ctx.Value("trace_id"),
 	}).Infof(format, args...)
 }
 

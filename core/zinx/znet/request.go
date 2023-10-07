@@ -24,6 +24,7 @@ type Request struct {
 	router   ziface.IRouter     //请求处理的函数
 	steps    ziface.HandleStep  //用来控制路由函数执行
 	stepLock *sync.RWMutex      //并发互斥
+	traceId  string             //链路追踪ID
 	args     map[string]any
 }
 
@@ -105,10 +106,10 @@ func (r *Request) GetAargs(key string) any {
 
 //SetTraceId 链路追踪ID
 func (r *Request) SetTraceId(traceId string) {
-	r.SetAargs("trace_id", traceId)
+	r.traceId = traceId
 }
 func (r *Request) GetTraceId() string {
-	return cast.ToString(r.args["trace_id"])
+	return r.traceId
 }
 
 //GetCtx
@@ -134,6 +135,9 @@ func (r *Request) Err() error {
 //Value
 func (r *Request) Value(key any) any {
 	if k, ok := key.(string); ok {
+		if k == "trace_id" {
+			return r.GetTraceId()
+		}
 		if k == "user_id" {
 			return r.conn.GetUserId()
 		}

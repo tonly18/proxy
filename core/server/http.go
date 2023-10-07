@@ -9,7 +9,9 @@ import (
 )
 
 type httpServer struct {
-	Http http.Server
+	Http   http.Server
+	Ctx    context.Context
+	Cancel context.CancelFunc
 }
 
 func NewHttpServer(config *HttpServerConfig) *httpServer {
@@ -17,7 +19,7 @@ func NewHttpServer(config *HttpServerConfig) *httpServer {
 		Http: http.Server{
 			Addr:           fmt.Sprintf(`%s:%d`, config.IP, config.Port),
 			Handler:        config.Handler,
-			ReadTimeout:    5 * time.Second,  //从链接被接受开始,到request body完全读取为止.
+			ReadTimeout:    5 * time.Second,  //从链接被接受开始,到request body完全读取完为止.
 			WriteTimeout:   10 * time.Second, //http:从request head读取结束开始到response write完成为止.
 			IdleTimeout:    10 * time.Second, //空闲时长:如果IdleTimeout为0,则使用ReadTimeout.
 			MaxHeaderBytes: 1 << 20,
@@ -32,8 +34,8 @@ func (s *httpServer) Start() error {
 }
 
 func (s *httpServer) Stop() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	s.Ctx, s.Cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer s.Cancel()
 
-	s.Http.Shutdown(ctx)
+	_ = s.Http.Shutdown(s.Ctx)
 }

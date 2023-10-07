@@ -34,7 +34,7 @@ func OnConnStartFunc(conn ziface.IConnection) {
 	logger.Info(conn, "[OnConnStartFunc] player on line, conn id: ", conn.GetConnID(), ", userId:", conn.GetUserId())
 }
 
-//OnConnStopFunc 下线
+// OnConnStopFunc 下线
 func OnConnStopFunc(conn ziface.IConnection) {
 	userOnLineNumber := conn.GetTCPServer().GetConnMgr().Len() //玩家在线数
 	proxyId := conn.GetTCPServer().GetID()
@@ -42,9 +42,6 @@ func OnConnStopFunc(conn ziface.IConnection) {
 	userId := conn.GetUserId()
 	clientId := conn.GetRemoteIP()
 	socketId := conn.GetConnID()
-
-	//删除conn
-	conn.Stop()
 
 	//call http server
 	client := httpclient.NewHttpClient(&httpclient.Config{})

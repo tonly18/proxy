@@ -7,7 +7,7 @@ import (
 )
 
 //获取配置文件并解析到指定的struck
-func loadConfigFile(fname string, configStruck interface{}) error {
+func loadConfigFile(fname string, configStruck any) error {
 	//viper
 	viper.AddConfigPath(global.PROXY_SERVER_WORK_PATH_ENV + "/conf")
 	viper.SetConfigName(getConfigFileName(fname))

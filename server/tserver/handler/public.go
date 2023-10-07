@@ -20,18 +20,18 @@ type PublicRouter struct {
 	BaseHandler
 }
 
-func (h *PublicRouter) Handle(request ziface.IRequest) error {
+func (t *PublicRouter) Handle(request ziface.IRequest) error {
 	//开始时间
 	start := time.Now()
 
 	//判断玩家是否登录
-	userid := request.GetConnection().GetUserId() //当前玩家ID
-	if userid == 0 {
+	userId := request.GetConnection().GetUserId() //当前玩家ID
+	if userId == 0 {
 		return errors.New("[Public Handle] player not login")
 	}
 
-	//获取玩家
-	conn, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(userid)
+	//获取玩家connection
+	conn, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(userId)
 	if err != nil {
 		return fmt.Errorf(`[Public Handle] player not exist. error: %w`, err)
 	}
@@ -42,9 +42,9 @@ func (h *PublicRouter) Handle(request ziface.IRequest) error {
 		"Content-Type": "application/octet-stream",
 		"proxy_id":     conn.GetTCPServer().GetID(),
 		"server_id":    conn.GetProperty("server_id"),
-		"user_id":      userid,
-		"trace_id":     request.GetTraceId(),
+		"user_id":      userId,
 		"client_ip":    conn.GetRemoteIP(),
+		"trace_id":     request.GetTraceId(),
 	}).Do()
 	if err != nil {
 		return fmt.Errorf(`[Public Handle] call http server is error: %w`, err)
@@ -58,31 +58,7 @@ func (h *PublicRouter) Handle(request ziface.IRequest) error {
 	if err != nil {
 		return fmt.Errorf(`[Public Handle] resp.GetData error: %w`, err)
 	}
-
-	/** 调用PHP GameServer **/
-	if downRawData == nil || len(downRawData) < 16 {
-		resp, err = client.NewRequest("POST", config.HttpConfig.GameServerPHPCommandAPI, request.GetData()).SetHeader(map[string]any{
-			"Content-Type": "application/octet-stream",
-			"proxy_id":     conn.GetTCPServer().GetID(),
-			"server_id":    conn.GetProperty("server_id"),
-			"user_id":      userid,
-			"trace_id":     request.GetTraceId(),
-			"client_ip":    conn.GetRemoteIP(),
-			"socket_id":    conn.GetConnID(),
-		}).Do()
-		if err != nil {
-			return fmt.Errorf(`[Public Handle] call http(php) server is error: %v`, err)
-		}
-		if resp.GetHeaderCode() != 200 {
-			return fmt.Errorf(`[Public Handle] call http(php) server is code:%v`, resp.Response.StatusCode)
-		}
-		//处理返回值
-		downRawData, err = resp.GetData()
-		if err != nil {
-			return fmt.Errorf(`[Public Handle] resp.GetData(php) error:%v`, err)
-		}
-	}
-
+	request.SetAargs("gameserver_id", resp.GetDataFromHeader("gameserver_id")) //game server id
 	if downRawData != nil && len(downRawData) < 16 {
 		return fmt.Errorf(`[Public Handle] resp.GetData rawDownData is empty. downRawData: %v`, downRawData)
 	}
@@ -94,8 +70,8 @@ func (h *PublicRouter) Handle(request ziface.IRequest) error {
 	}
 
 	//给客户端(玩家)推送消息
-	playerId := resp.GetDataFromHeader("player_id")
-	playerIds := make([]uint64, 0, 20)
+	playerId := resp.GetDataFromHeader("player_id") //玩家ID
+	playerIds := make([]uint64, 0, 10)
 	if playerId != "" {
 		for _, v := range strings.Split(playerId, ",") {
 			playerIds = append(playerIds, cast.ToUint64(v))

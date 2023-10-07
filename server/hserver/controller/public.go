@@ -9,6 +9,7 @@ import (
 
 //PublicController gameServer向proxy发送消息
 func PublicController(req *server.Request) *server.Response {
+	//需要推送消息的玩家ID
 	playerIds := req.GetPlayerID()
 	if len(playerIds) == 0 {
 		return &server.Response{
@@ -38,11 +39,11 @@ func PublicController(req *server.Request) *server.Response {
 	for _, uid := range playerIds {
 		conn, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(uint64(uid))
 		if err != nil { //玩家不存在
-			logger.Errorf(req, `[http server public] player is not exist. user id:%v`, uid)
+			logger.Errorf(req, `[http server public] player is not exist. user id:%v, error:%v`, uid, err)
 			continue
 		}
 		if err := conn.SendByteMsg(data); err != nil {
-			logger.Errorf(req, `[http server public] player.SendByteMsg error:%v, user id:%v`, err, uid)
+			logger.Errorf(req, `[http server public] player.SendByteMsg. user id:%v, error:%v`, uid, err)
 			continue
 		}
 	}

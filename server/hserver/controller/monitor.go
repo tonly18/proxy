@@ -6,14 +6,14 @@ import (
 	"runtime"
 )
 
-//groution 监控
-func MonitorGroutionController(w http.ResponseWriter, r *http.Request) {
+// goroutine 监控
+func MonitorGoroutineController(w http.ResponseWriter, r *http.Request) {
 	data := fmt.Sprintf(`goroutine数量: %v`, runtime.NumGoroutine())
 
 	writeResponseBytes(w, []byte(data))
 }
 
-//memory 监控
+// memory 监控
 func MonitorMemoryController(w http.ResponseWriter, r *http.Request) {
 	//内存数据
 	mem := runtime.MemStats{}

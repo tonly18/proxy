@@ -15,7 +15,7 @@ type Request struct {
 	PlayerID       []int  //需要推送消息的玩家ID
 	UserID         uint64 //当前玩家ID
 	Conn           ziface.IConnection
-	Data           map[string]any
+	data           map[string]any
 }
 
 func (r *Request) GetPlayerID() []int {
@@ -31,10 +31,13 @@ func (r *Request) GetTraceID() any {
 }
 
 func (r *Request) GetData(key string) any {
-	return r.Data[key]
+	return r.data[key]
 }
 func (r *Request) SetData(key string, value any) {
-	r.Data[key] = value
+	if len(r.data) == 0 {
+		r.data = make(map[string]any, 10)
+	}
+	r.data[key] = value
 }
 
 //Deadline

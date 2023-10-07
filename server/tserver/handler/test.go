@@ -5,7 +5,7 @@ import (
 	"proxy/core/zinx/ziface"
 )
 
-//TestRouter Struct
+// TestRouter Struct
 type TestRouter struct {
 	BaseHandler
 }
@@ -36,7 +36,6 @@ func (h *TestRouter) Handle(request ziface.IRequest) error {
 	conn := request.GetConnection()
 	fmt.Println("conn-hc::::::", conn.GetHeartBeat())
 
-	//return
 	//return fmt.Errorf("handler is error")
 	return nil
 }

@@ -25,13 +25,15 @@ func init() {
 
 //获取config配置文件
 func LoadProxyConfig() error {
-	if HttpConfig.HttpPort == 0 {
-		if err := loadConfigFile("config", HttpConfig); err != nil {
-			return err
-		}
-		HttpConfig.GameServerDoLoginAPI = HttpConfig.GameServerHost + HttpConfig.GameServerDoLoginAPI
-		HttpConfig.GameServerCommandAPI = HttpConfig.GameServerHost + HttpConfig.GameServerCommandAPI
-		HttpConfig.GameServerOnOffLineAPI = HttpConfig.GameServerHost + HttpConfig.GameServerOnOffLineAPI
+	if err := loadConfigFile("config", HttpConfig); err != nil {
+		return err
 	}
+
+	//处理参数
+	HttpConfig.GameServerDoLoginAPI = HttpConfig.GameServerHost + HttpConfig.GameServerDoLoginAPI
+	HttpConfig.GameServerCommandAPI = HttpConfig.GameServerHost + HttpConfig.GameServerCommandAPI
+	HttpConfig.GameServerOnOffLineAPI = HttpConfig.GameServerHost + HttpConfig.GameServerOnOffLineAPI
+
+	//return
 	return nil
 }

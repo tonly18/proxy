@@ -35,17 +35,17 @@ func (s *Signal) notify() {
 func (s *Signal) Waiter() error {
 	s.notify()
 
-	for s := range s.sigChan {
-		switch s {
+	for sig := range s.sigChan {
+		switch sig {
 		case syscall.SIGINT:
 			//ctrl + c
 			//fmt.Println("control signal int:", s)
 			return nil
 		case syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT:
-			//fmt.Println("Program Exit...", s)
+			//fmt.Println("control signal(hup|term|quit):", s)
 			return nil
 		case syscall.SIGUSR1:
-			//fmt.Println("usr1 signal", s)
+			//fmt.Println("control signal usr1:", s)
 			return nil
 		case syscall.SIGUSR2:
 			//重新加载proxy配置文件
@@ -56,7 +56,7 @@ func (s *Signal) Waiter() error {
 			}
 			continue
 		default:
-			//fmt.Println("other signal", s)
+			//fmt.Println("other signal:", s)
 		}
 	}
 

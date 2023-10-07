@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"proxy/core/server"
 	"proxy/server/global"
+	"runtime"
 )
 
 func TestController(w http.ResponseWriter, r *http.Request) {
@@ -48,9 +49,10 @@ func TestController(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	w.Header().Set("user_id", "111")
-	connNum := global.GetTCPServer().GetConnMgr().Len()
 	playerNum := global.GetTCPServer().GetConnMgr().PlayerLen()
-	data := fmt.Sprintf(`在线玩家数量: %v-%v`, connNum, playerNum)
+	connNum := global.GetTCPServer().GetConnMgr().Len()
+	goroutineNum := runtime.NumGoroutine()
+	data := fmt.Sprintf(`在线玩家数量: %v-%v, goroutine: %v-26-%v-%v`, playerNum, connNum, goroutineNum, playerNum*3, goroutineNum-26-playerNum*3)
 
 	writeResponseBytes(w, []byte(data))
 }

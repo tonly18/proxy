@@ -19,7 +19,7 @@ func WrapHandle(handler func(*server.Request) *server.Response) func(http.Respon
 			if err := recover(); err != nil {
 				//debug.PrintStack()
 				logger.Error(r.Context(), fmt.Sprintf(`[wrap handle] Error(1): %v`, err))
-				logger.Error(r.Context(), fmt.Sprintf(`[wrap handle] User Id: %v, Client IP: %v`, r.Header.Get("user_id"), r.Header.Get("client_ip")))
+				logger.Error(r.Context(), fmt.Sprintf(`[wrap handle] ProxyId:%v, ServerId:%v, UserId: %v, ClientIP: %v`, r.Header.Get("proxy_id"), r.Header.Get("server_id"), r.Header.Get("user_id"), r.Header.Get("client_ip")))
 				for i := 1; i < 20; i++ {
 					if pc, file, line, ok := runtime.Caller(i); ok {
 						funcName := runtime.FuncForPC(pc).Name() //获取函数名
@@ -38,6 +38,7 @@ func WrapHandle(handler func(*server.Request) *server.Response) func(http.Respon
 		clientIP := r.Header.Get("client_ip")
 		playerId := r.Header.Get("player_id") //需要推送消息的玩家ID(包含当前玩家ID)
 		traceId := r.Header.Get("trace_id")
+		gameServerId := r.Header.Get("gameserver_id") //GameServer ID
 
 		//参数判断
 		if proxyId == "" || serverId == "" || userId == "" || clientIP == "" || playerId == "" || traceId == "" {
@@ -46,7 +47,7 @@ func WrapHandle(handler func(*server.Request) *server.Response) func(http.Respon
 		}
 
 		//待推送消息的玩家ID
-		playerIds := make([]int, 0, 20)
+		playerIds := make([]int, 0, len(playerId)/2)
 		for _, v := range strings.Split(playerId, ",") {
 			if v != "" {
 				playerIds = append(playerIds, cast.ToInt(v))
@@ -74,9 +75,9 @@ func WrapHandle(handler func(*server.Request) *server.Response) func(http.Respon
 			PlayerID:       playerIds,
 			UserID:         uid,
 			Conn:           conn,
-			Data:           make(map[string]any, 10),
 		}
 		request.SetTraceID(traceId)
+		request.SetData("gameserver_id", gameServerId)
 
 		//handler
 		resp := handler(request)
