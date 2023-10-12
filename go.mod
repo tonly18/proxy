@@ -8,6 +8,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cast v1.5.1
 	github.com/spf13/viper v1.12.0
+	github.com/tonly18/httpclient v0.0.2
 	google.golang.org/protobuf v1.28.0
 )
 
@@ -23,7 +24,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/subosito/gotenv v1.4.0 // indirect
-	github.com/tonly18/httpclient v0.0.1 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/ini.v1 v1.66.6 // indirect
