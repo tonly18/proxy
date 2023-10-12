@@ -10,12 +10,13 @@ import (
 	"proxy/library/logger"
 	"proxy/server/config"
 	"proxy/server/global"
+	"proxy/server/library"
 	"proxy/server/utils"
 	"strings"
 	"time"
 )
 
-//PublicRouter Struct
+// PublicRouter Struct
 type PublicRouter struct {
 	BaseHandler
 }
@@ -37,8 +38,9 @@ func (t *PublicRouter) Handle(request ziface.IRequest) error {
 	}
 
 	//http client
+	url := fmt.Sprintf(`%v%v`, library.NewPoll().Get(), config.HttpConfig.GameServerCommandAPI)
 	client := httpclient.NewHttpClient(&httpclient.Config{})
-	resp, err := client.NewRequest("POST", config.HttpConfig.GameServerCommandAPI, request.GetData()).SetHeader(map[string]any{
+	resp, err := client.NewRequest("POST", url, request.GetData()).SetHeader(map[string]any{
 		"Content-Type": "application/octet-stream",
 		"proxy_id":     conn.GetTCPServer().GetID(),
 		"server_id":    conn.GetProperty("server_id"),
@@ -64,9 +66,11 @@ func (t *PublicRouter) Handle(request ziface.IRequest) error {
 	}
 
 	//json
-	resultJson := utils.ResultJSON{}
-	if err := json.Unmarshal(downRawData, &resultJson); err == nil {
-		return fmt.Errorf(`[Public Handle] resp.GetData rawDownData: %v`, resultJson)
+	if downRawData != nil {
+		resultJson := utils.ResultJSON{}
+		if err := json.Unmarshal(downRawData, &resultJson); err == nil {
+			return fmt.Errorf(`[Public Handle] resp.GetData rawDownData: %v`, resultJson)
+		}
 	}
 
 	//给客户端(玩家)推送消息

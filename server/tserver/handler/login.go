@@ -8,11 +8,12 @@ import (
 	"proxy/library/logger"
 	"proxy/server/config"
 	"proxy/server/global"
+	"proxy/server/library"
 	"proxy/server/utils/pack"
 	"time"
 )
 
-//LoginRouter Struct
+// LoginRouter Struct
 type LoginRouter struct {
 	BaseHandler
 }
@@ -38,9 +39,9 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	//}
 
 	//调用gameServer验证登录
-	gameServerDoLoginApi := config.HttpConfig.GameServerDoLoginAPI
+	url := fmt.Sprintf(`%v%v`, library.NewPoll().Get(), config.HttpConfig.GameServerDoLoginAPI)
 	client := httpclient.NewHttpClient(&httpclient.Config{})
-	resp, err := client.NewRequest("POST", gameServerDoLoginApi, request.GetData()).SetHeader(map[string]any{
+	resp, err := client.NewRequest("POST", url, request.GetData()).SetHeader(map[string]any{
 		"Content-Type": "application/octet-stream",
 		"proxy_id":     request.GetConnection().GetTCPServer().GetID(),
 		"server_id":    0,

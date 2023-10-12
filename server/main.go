@@ -32,9 +32,6 @@ func main() {
 		sig.Cannel()
 	}
 
-	//clear
-	utils.FinishClear()
-
 	//Finish
 	fmt.Println("[All Services Are Stopped!!!]")
 }
