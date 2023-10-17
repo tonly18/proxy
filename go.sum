@@ -179,8 +179,6 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/subosito/gotenv v1.4.0 h1:yAzM1+SmVcz5R4tXGsNMu1jUl2aOJXoiWUCEwwnGrvs=
 github.com/subosito/gotenv v1.4.0/go.mod h1:mZd6rFysKEcUhUHXJk0C/08wAgyDBFuwEYL7vWWGaGo=
-github.com/tonly18/httpclient v0.0.2 h1:1LK+iXBF/OSPiPld2UngSbvyy+uuw2LzOLHSd1UujKA=
-github.com/tonly18/httpclient v0.0.2/go.mod h1:BjKFeS3clJiLun1cpM7VeoHIeyx5qYlWUnUJCz9AYMY=
 github.com/tonly18/httpclient v0.0.4 h1:oMPpMPFRivp/dAulNV4CMr2jjDrWI4Cc7ZYznjLemNA=
 github.com/tonly18/httpclient v0.0.4/go.mod h1:qttw5wqUe3NNXIqTEPwNIAv/70QkLe8myWn/RCcyZro=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
