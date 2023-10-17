@@ -1,13 +1,13 @@
 package controller
 
 import (
-	"io/ioutil"
+	"io"
 	"proxy/core/server"
 	"proxy/library/logger"
 	"proxy/server/global"
 )
 
-//PublicController gameServer向proxy发送消息
+// PublicController gameServer向proxy发送消息
 func PublicController(req *server.Request) *server.Response {
 	//需要推送消息的玩家ID
 	playerIds := req.GetPlayerID()
@@ -19,7 +19,7 @@ func PublicController(req *server.Request) *server.Response {
 	}
 
 	//data
-	data, err := ioutil.ReadAll(req.Request.Body)
+	data, err := io.ReadAll(req.Request.Body)
 	if err != nil {
 		return &server.Response{
 			Code: 100005,
