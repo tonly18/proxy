@@ -39,7 +39,7 @@ func (t *PublicRouter) Handle(request ziface.IRequest) error {
 
 	//http client
 	url := fmt.Sprintf(`%v%v`, library.NewPoll().Get(), config.HttpConfig.GameServerCommandAPI)
-	httpClient := httpclient.NewHttpClient(&httpclient.Config{})
+	httpClient := httpclient.NewClient(&httpclient.Config{})
 	resp, err := httpClient.NewRequest("POST", url, request.GetData()).SetHeader(map[string]any{
 		"Content-Type": "application/octet-stream",
 		"proxy_id":     conn.GetTCPServer().GetID(),

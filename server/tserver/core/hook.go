@@ -16,7 +16,7 @@ func OnConnStartFunc(conn ziface.IConnection) {
 
 	//call http server
 	url := fmt.Sprintf(`%v%v`, library.NewPoll().Get(), config.HttpConfig.GameServerOnOffLineAPI)
-	httpClient := httpclient.NewHttpClient(&httpclient.Config{})
+	httpClient := httpclient.NewClient(&httpclient.Config{})
 	resp, err := httpClient.Get(url, map[string]any{
 		"online": userOnLineNumber,
 		"status": 1,
@@ -48,7 +48,7 @@ func OnConnStopFunc(conn ziface.IConnection) {
 
 	//call http server
 	url := fmt.Sprintf(`%v%v`, library.NewPoll().Get(), config.HttpConfig.GameServerOnOffLineAPI)
-	httpClient := httpclient.NewHttpClient(&httpclient.Config{})
+	httpClient := httpclient.NewClient(&httpclient.Config{})
 	resp, err := httpClient.Get(url, map[string]any{
 		"online": userOnLineNumber,
 		"status": 0,
