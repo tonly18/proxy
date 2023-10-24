@@ -10,12 +10,13 @@ import (
 	"proxy/core/zinx/ziface"
 	"proxy/core/zinx/zlog"
 	"proxy/library/command"
+	"proxy/library/pool"
 	"strings"
 	"sync"
 	"time"
 )
 
-//Connection 链接
+// Connection 链接
 type Connection struct {
 	//当前Conn属于哪个Server
 	TCPServer ziface.IServer
@@ -53,7 +54,7 @@ type Connection struct {
 	hc ziface.IHeartbeatChecker
 }
 
-//NewConnection 创建连接的方法
+// NewConnection 创建连接的方法
 func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64, msgHandler ziface.IMsgHandle) *Connection {
 	//初始化Conn属性
 	c := &Connection{
@@ -76,7 +77,7 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64, msgH
 	return c
 }
 
-//StartWriter 写消息Goroutine， 用户将数据发送给客户端
+// StartWriter 写消息Goroutine， 用户将数据发送给客户端
 func (c *Connection) StartWriter() {
 	zlog.Info("[Conn Write] Goroutine is Running!", c.GetRemoteAddr().String())
 
@@ -112,7 +113,7 @@ func (c *Connection) StartWriter() {
 	}
 }
 
-//StartReader 读消息Goroutine，用于从客户端中读取数据
+// StartReader 读消息Goroutine，用于从客户端中读取数据
 func (c *Connection) StartReader() {
 	zlog.Info("[Conn Read] Goroutine is Running!", c.GetRemoteAddr().String())
 
@@ -136,8 +137,9 @@ func (c *Connection) StartReader() {
 			}
 
 			//读取客户端的Msg head
-			msgHeadBuffer := make([]byte, c.TCPServer.Packet().GetHeadLen())
+			msgHeadBuffer := pool.PoolGet()
 			if _, err := io.ReadFull(c.Conn, msgHeadBuffer); err != nil {
+				pool.PoolPut(msgHeadBuffer)
 				zlog.Errorf(`[Conn Read] Read Msg Head Error:%v, Address:%v`, err, c.GetRemoteAddr())
 				return
 			}
@@ -145,23 +147,27 @@ func (c *Connection) StartReader() {
 			//拆包:得到msgID和datalen放在msg中
 			msg, err := c.TCPServer.Packet().UnPack(msgHeadBuffer)
 			if err != nil {
+				pool.PoolPut(msgHeadBuffer)
 				zlog.Errorf(`[Conn Read] Unpack Error:%v, Address:%v`, err, c.GetRemoteAddr())
 				return
 			}
 
 			//根据dataLen读取data,放在msg.Data中
 			if msg.GetMsgLen() < c.TCPServer.Packet().GetHeadLen() {
+				pool.PoolPut(msgHeadBuffer)
 				continue
 			}
 			var msgBodyBuffer []byte
 			if msg.GetMsgLen() > 0 {
 				msgBodyBuffer = make([]byte, msg.GetMsgLen()-c.TCPServer.Packet().GetHeadLen())
 				if _, err := io.ReadFull(c.Conn, msgBodyBuffer); err != nil {
+					pool.PoolPut(msgHeadBuffer)
 					zlog.Error("[Conn Read] Read Msg Data Error:", err)
 					return
 				}
 			}
 			msg.SetRawData(msgHeadBuffer, msgBodyBuffer) //设置原始二进制流和data
+			pool.PoolPut(msgHeadBuffer)
 
 			//正常读取到对端数据,更新心跳检测Active状态
 			if c.hc != nil {
@@ -184,7 +190,7 @@ func (c *Connection) StartReader() {
 	}
 }
 
-//Start 启动连接，让当前连接开始工作
+// Start 启动连接，让当前连接开始工作
 func (c *Connection) Start() {
 	zlog.Infof(`[Conn Start] Goroutine is Running! Addr:%v`, c.GetRemoteAddr())
 
@@ -219,47 +225,47 @@ func (c *Connection) Start() {
 	}
 }
 
-//Stop 停止连接，结束当前连接状态
+// Stop 停止连接，结束当前连接状态
 func (c *Connection) Stop() {
 	c.cancel()
 }
 
-//GetTCPServer 获取TCPServer
+// GetTCPServer 获取TCPServer
 func (c *Connection) GetTCPServer() ziface.IServer {
 	return c.TCPServer
 }
 
-//GetTCPConnection 从当前连接获取原始的socket TCPConn
+// GetTCPConnection 从当前连接获取原始的socket TCPConn
 func (c *Connection) GetTCPConnection() *net.TCPConn {
 	return c.Conn
 }
 
-//GetConnID 获取当前连接ID
+// GetConnID 获取当前连接ID
 func (c *Connection) GetConnID() uint64 {
 	return c.ConnID
 }
 
-//RemoteAddr 获取远程客户端地址信息
+// RemoteAddr 获取远程客户端地址信息
 func (c *Connection) GetRemoteAddr() net.Addr {
 	return c.remoteAddr
 }
 
-//GetLocalAddr 获取服务端地址信息
+// GetLocalAddr 获取服务端地址信息
 func (c *Connection) GetLocalAddr() net.Addr {
 	return c.localAddr
 }
 
-//GetRemoteIP ip
+// GetRemoteIP ip
 func (c *Connection) GetRemoteIP() string {
 	return strings.Split(c.remoteAddr.String(), ":")[0]
 }
 
-//GetRemotePort port
+// GetRemotePort port
 func (c *Connection) GetRemotePort() string {
 	return strings.Split(c.remoteAddr.String(), ":")[1]
 }
 
-//SendMsg 直接将Message数据发送数据给远程的TCP客户端
+// SendMsg 直接将Message数据发送数据给远程的TCP客户端
 func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 	c.msgLock.RLock()
 	defer c.msgLock.RUnlock()
@@ -285,7 +291,7 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 	return err
 }
 
-//SendBuffMsg  发生BuffMsg
+// SendBuffMsg  发生BuffMsg
 func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
 	c.msgLock.RLock()
 	defer c.msgLock.RUnlock()
@@ -319,7 +325,7 @@ func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
 	return nil
 }
 
-//SendByteMsg  发生BuffMsg
+// SendByteMsg  发生BuffMsg
 func (c *Connection) SendByteMsg(data []byte) error {
 	//lock
 	c.msgLock.RLock()
@@ -345,7 +351,7 @@ func (c *Connection) SendByteMsg(data []byte) error {
 	return nil
 }
 
-//SetProperty 设置链接属性
+// SetProperty 设置链接属性
 func (c *Connection) SetProperty(key string, value any) {
 	c.propertyLock.Lock()
 	defer c.propertyLock.Unlock()
@@ -353,7 +359,7 @@ func (c *Connection) SetProperty(key string, value any) {
 	c.property[key] = value
 }
 
-//GetProperty 获取链接属性
+// GetProperty 获取链接属性
 func (c *Connection) GetProperty(key string) any {
 	c.propertyLock.Lock()
 	defer c.propertyLock.Unlock()
@@ -361,7 +367,7 @@ func (c *Connection) GetProperty(key string) any {
 	return c.property[key]
 }
 
-//RemoveProperty 移除链接属性
+// RemoveProperty 移除链接属性
 func (c *Connection) RemoveProperty(key string) {
 	c.propertyLock.Lock()
 	defer c.propertyLock.Unlock()
@@ -369,12 +375,12 @@ func (c *Connection) RemoveProperty(key string) {
 	delete(c.property, key)
 }
 
-//Context 返回ctx，用于用户自定义的go程获取连接退出状态
+// Context 返回ctx，用于用户自定义的go程获取连接退出状态
 func (c *Connection) Context() context.Context {
 	return c.ctx
 }
 
-//SetProxyId 网关
+// SetProxyId 网关
 func (c *Connection) SetProxyId(proxyId uint32) {
 	c.SetProperty("proxy_id", proxyId)
 }
@@ -382,7 +388,7 @@ func (c *Connection) GetProxyId() uint32 {
 	return cast.ToUint32(c.GetProperty("proxy_id"))
 }
 
-//SetServerId 区服ID
+// SetServerId 区服ID
 func (c *Connection) SetServerId(serverId uint32) {
 	c.SetProperty("server_id", serverId)
 }
@@ -390,7 +396,7 @@ func (c *Connection) GetServerId() uint32 {
 	return cast.ToUint32(c.GetProperty("server_id"))
 }
 
-//SetUIN 帐号ID
+// SetUIN 帐号ID
 func (c *Connection) SetUIN(uin uint64) {
 	c.SetProperty("uin", uin)
 }
@@ -398,7 +404,7 @@ func (c *Connection) GetUIN() uint64 {
 	return cast.ToUint64(c.GetProperty("uin"))
 }
 
-//SetUserId 玩家ID
+// SetUserId 玩家ID
 func (c *Connection) SetUserId(userId uint64) {
 	c.userId = userId
 }
@@ -437,22 +443,22 @@ func (c *Connection) finalizer() {
 	zlog.Infof(`[Conn Finalizer] Conn Stop ConnID:%v, UserID:%v, Address:%v`, c.ConnID, c.GetUserId(), c.GetRemoteAddr())
 }
 
-//Deadline
+// Deadline
 func (c *Connection) Deadline() (deadline time.Time, ok bool) {
 	return c.ctx.Deadline()
 }
 
-//Done
+// Done
 func (c *Connection) Done() <-chan struct{} {
 	return c.ctx.Done()
 }
 
-//Err
+// Err
 func (c *Connection) Err() error {
 	return c.ctx.Err()
 }
 
-//Value
+// Value
 func (c *Connection) Value(key any) any {
 	if k, ok := key.(string); ok {
 		if k == "user_id" {
@@ -466,7 +472,7 @@ func (c *Connection) Value(key any) any {
 	return c.GetProperty(cast.ToString(key))
 }
 
-//GetCreateTime 链接创建时间
+// GetCreateTime 链接创建时间
 func (c *Connection) GetCreateTime() int32 {
 	return c.createTime
 }
@@ -483,12 +489,12 @@ func (c *Connection) updateActivity() {
 	c.lastActivityTime = time.Now()
 }
 
-//SetHeartBeat 设置心跳检测器
+// SetHeartBeat 设置心跳检测器
 func (c *Connection) SetHeartBeat(checker ziface.IHeartbeatChecker) {
 	c.hc = checker
 }
 
-//GetHeartBeat 获取心跳检测器
+// GetHeartBeat 获取心跳检测器
 func (c *Connection) GetHeartBeat() ziface.IHeartbeatChecker {
 	return c.hc
 }
