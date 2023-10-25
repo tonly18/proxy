@@ -8,7 +8,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cast v1.5.1
 	github.com/spf13/viper v1.12.0
-	github.com/tonly18/httpclient v1.0.0
+	github.com/tonly18/httpclient v1.0.1
 	google.golang.org/protobuf v1.28.0
 )
 
