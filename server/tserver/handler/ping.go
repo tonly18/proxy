@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//PingRouter Struct
+// PingRouter Struct
 type PingRouter struct {
 	BaseHandler
 }
@@ -20,19 +20,15 @@ func (h *PingRouter) Handle(request ziface.IRequest) error {
 
 	//params
 	data := request.GetData()
-	dp := pack.NewDataPackPing()
-	_, err := dp.UnPack(data)
+	fmt.Println("ping-data::::::", string(data))
+
+	downMsg := pack.NewMessageDown(global.CMD_DOWN_PONG, 0, nil)
+	dp := pack.NewDataPackDown()
+	data, err := dp.Pack(downMsg)
 	if err != nil {
 		return fmt.Errorf(`[ping handler] unpack error:%v`, err)
 	}
-
-	//send cmd=46
-	msg := pack.NewMessagePing(global.CMD_DOWN_PONG)
-	pingData, err := dp.Pack(msg)
-	if err != nil {
-		return fmt.Errorf(`[ping handler] pack error:%v`, err)
-	}
-	if err := request.GetConnection().SendByteMsg(pingData); err != nil {
+	if err := request.GetConnection().SendByteMsg(data); err != nil {
 		return fmt.Errorf(`[ping handler] conn send error:%v`, err)
 	}
 

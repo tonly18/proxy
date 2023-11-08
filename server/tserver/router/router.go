@@ -14,7 +14,7 @@ func InitRouter(s ziface.IServer) {
 	s.AddRouter(global.CMD_UP_PROTO, &handler.PublicRouter{})
 
 	//login handler
-	s.AddRouter(global.CMD_UP_DOLIGON, &handler.LoginRouter{})
+	s.AddRouter(global.CMD_UP_LOGIN, &handler.LoginRouter{})
 
 	//ping handler
 	s.AddRouter(global.CMD_UP_PING, &handler.PingRouter{})

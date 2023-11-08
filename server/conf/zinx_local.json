@@ -13,7 +13,7 @@
 
   "MaxMsgChanLen": 2048,
 
-  "LogDir": "D:/slggame/gamesproxy/proxy/server/log",
+  "LogDir": "E:/itemtest/github.com/proxy/server/log",
   "LogFile": "zinx.log",
 
   "MaxConnReadTime":  40,

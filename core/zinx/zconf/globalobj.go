@@ -3,7 +3,6 @@ package zconf
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"proxy/core/zinx/ziface"
 	"proxy/core/zinx/zlog"
@@ -11,8 +10,8 @@ import (
 )
 
 /*
-	存储一切有关Zinx框架的全局参数，供其他模块使用
-	一些参数也可以通过 用户根据 zinx.json来配置
+存储一切有关Zinx框架的全局参数，供其他模块使用
+一些参数也可以通过 用户根据 zinx.json来配置
 */
 type Config struct {
 	/*
@@ -56,11 +55,11 @@ type Config struct {
 }
 
 /*
-	定义一个全局的对象
+定义一个全局的对象
 */
 var GlobalObject *Config
 
-//PathExists 判断一个文件是否存在
+// PathExists 判断一个文件是否存在
 func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
@@ -72,14 +71,14 @@ func PathExists(path string) (bool, error) {
 	return false, err
 }
 
-//Reload 读取用户的配置文件
+// Reload 读取用户的配置文件
 func (g *Config) Reload() {
 
 	if confFileExists, _ := PathExists(g.ConfFilePath); confFileExists != true {
 		panic(fmt.Sprintf(`Config File:%v is not exist!`, g.ConfFilePath))
 	}
 
-	data, err := ioutil.ReadFile(g.ConfFilePath)
+	data, err := os.ReadFile(g.ConfFilePath)
 	if err != nil {
 		panic(err)
 	}
@@ -100,7 +99,7 @@ func (g *Config) HeartbeatMaxDuration() time.Duration {
 }
 
 /*
-	提供init方法，默认加载
+提供init方法，默认加载
 */
 func init() {
 	//初始化GlobalObject变量，设置一些默认值
@@ -126,7 +125,7 @@ func init() {
 	GlobalObject.Reload()
 }
 
-//获取配置文件
+// 获取配置文件
 func getConfigFile() string {
 	if ZINX_ENV == "" {
 		return ZINX_WORK_PATH_ENV + "/conf/zinx.json"
