@@ -46,14 +46,18 @@ func S2Byte(s string) (b []byte) {
 	return unsafe.Slice(unsafe.StringData(s), len(s))
 }
 
-// SliceJoin 链接为字符串
+// SliceJoin 拼接为字符串
 func SliceJoin[T comparable](s []T, sep string) string {
-	var result bytes.Buffer
-	for _, v := range s {
-		result.WriteString(fmt.Sprintf(`%v`, v))
+	if len(s) == 0 {
+		return ""
 	}
 
-	return result.String()
+	var result bytes.Buffer
+	for _, v := range s {
+		result.WriteString(fmt.Sprintf(`%v%v`, sep, v))
+	}
+
+	return result.String()[len(sep):]
 }
 
 // GenRandom 生成随机数
