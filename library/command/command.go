@@ -1,25 +1,23 @@
 package command
 
 import (
-	"github.com/spf13/cast"
-	"math/rand"
-	"reflect"
-	"time"
+	"bytes"
+	crand "crypto/rand"
+	"fmt"
+	"math"
+	"math/big"
+	"strconv"
 	"unsafe"
 )
 
-//GenTraceID 生成链路追踪ID
+// GenTraceID 生成链路追踪ID
 func GenTraceID() string {
-	traceId := []byte(cast.ToString(time.Now().UnixNano()))
-	rand.Shuffle(len(traceId), func(i, j int) {
-		traceId[i], traceId[j] = traceId[j], traceId[i]
-	})
-
-	return B2String(traceId)
+	traceId := GenRandom()
+	return strconv.Itoa(int(traceId))
 }
 
-//IsValueNil 值判空
-func IsValueNil(v interface{}) bool {
+// IsValueNil 值判空
+func IsValueNil(v any) bool {
 	if v == nil {
 		return true
 	}
@@ -38,17 +36,28 @@ func IsValueNil(v interface{}) bool {
 	return uintptr(efacePtr.ptr) == 0x0
 }
 
-//B2String []byte 转 string
+// B2String []byte 转 string
 func B2String(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
+	return unsafe.String(&b[0], len(b))
 }
 
-//S2Byte string 转 []byte
+// S2Byte string 转 []byte
 func S2Byte(s string) (b []byte) {
-	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
-	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	bh.Data = sh.Data
-	bh.Cap = sh.Len
-	bh.Len = sh.Len
-	return b
+	return unsafe.Slice(unsafe.StringData(s), len(s))
+}
+
+// SliceJoin 链接为字符串
+func SliceJoin[T comparable](s []T, sep string) string {
+	var result bytes.Buffer
+	for _, v := range s {
+		result.WriteString(fmt.Sprintf(`%v`, v))
+	}
+
+	return result.String()
+}
+
+// GenRandom 生成随机数
+func GenRandom() int64 {
+	randomNum, _ := crand.Int(crand.Reader, big.NewInt(math.MaxInt64))
+	return randomNum.Int64()
 }
