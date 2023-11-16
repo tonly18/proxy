@@ -52,6 +52,8 @@ type Connection struct {
 	lastActivityTime time.Time
 	//心跳检测器
 	hc ziface.IHeartbeatChecker
+	//是否是被踢
+	kickOut int8 //0不是|1是
 }
 
 // NewConnection 创建连接的方法
@@ -497,4 +499,14 @@ func (c *Connection) SetHeartBeat(checker ziface.IHeartbeatChecker) {
 // GetHeartBeat 获取心跳检测器
 func (c *Connection) GetHeartBeat() ziface.IHeartbeatChecker {
 	return c.hc
+}
+
+// SetKickOut 设置是被被踢
+func (c *Connection) SetKickOut(kickout int8) {
+	c.kickOut = kickout
+}
+
+// GetKickOut 获取是被被踢
+func (c *Connection) GetKickOut() int8 {
+	return c.kickOut
 }
