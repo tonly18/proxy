@@ -29,6 +29,7 @@ type IConnection interface {
 	GetTCPServer() IServer          //获取当前链接对应的server
 	GetTCPConnection() *net.TCPConn //从当前连接获取原始的socket TCPConn
 	GetConnID() uint64              //获取当前连接ID
+	GetMsgHandler() IMsgHandle      //获取消息处理器
 	GetRemoteAddr() net.Addr        //获取远程客户端地址信息
 	GetLocalAddr() net.Addr         //获取服务端地址信息
 	GetRemoteIP() string            //获取远程地址:ip
@@ -47,8 +48,6 @@ type IConnection interface {
 	GetProxyId() uint32
 	SetServerId(uint32) //区服ID
 	GetServerId() uint32
-	SetUIN(uint64) //帐号
-	GetUIN() uint64
 	SetUserId(uint64) //角色ID(玩家ID)
 	GetUserId() uint64
 

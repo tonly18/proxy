@@ -19,13 +19,13 @@ import (
 // Connection 链接
 type Connection struct {
 	//当前Conn属于哪个Server
-	TCPServer ziface.IServer
+	tcpServer ziface.IServer
 	//当前连接的socket TCP套接字
-	Conn *net.TCPConn
+	conn *net.TCPConn
 	//当前连接的ID 也可以称作为SessionID，ID全局唯一
-	ConnID uint64
+	connID uint64
 	//消息管理MsgID和对应处理方法的消息管理模块
-	MsgHandler ziface.IMsgHandle
+	msgHandler ziface.IMsgHandle
 	//告知该链接已经退出/停止的channel
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -57,14 +57,14 @@ type Connection struct {
 }
 
 // NewConnection 创建连接的方法
-func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64, msgHandler ziface.IMsgHandle) *Connection {
+func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64) ziface.IConnection {
 	//初始化Conn属性
 	c := &Connection{
-		TCPServer:   server,
-		Conn:        conn,
-		ConnID:      connID,
+		tcpServer:   server,
+		conn:        conn,
+		connID:      connID,
 		isClosed:    false,
-		MsgHandler:  msgHandler,
+		msgHandler:  server.GetMsgHandler(),
 		msgBuffChan: make(chan []byte, zconf.GlobalObject.MaxMsgChanLen),
 		property:    make(map[string]any),
 		remoteAddr:  conn.RemoteAddr(),
@@ -73,7 +73,7 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64, msgH
 	}
 
 	//将新创建的Conn添加到链接管理中
-	c.TCPServer.GetConnMgr().Add(c)
+	c.GetTCPServer().GetConnMgr().Add(c)
 
 	//return
 	return c
@@ -97,11 +97,11 @@ func (c *Connection) StartWriter() {
 			if ok {
 				//设置写入数据流时间(100毫秒)
 				if zconf.GlobalObject.MaxConnWriteTime > 0 {
-					c.Conn.SetWriteDeadline(time.Now().Add(time.Millisecond * time.Duration(zconf.GlobalObject.MaxConnWriteTime)))
+					c.GetTCPConnection().SetWriteDeadline(time.Now().Add(time.Millisecond * time.Duration(zconf.GlobalObject.MaxConnWriteTime)))
 				}
 
 				//有数据要写给客户端
-				if _, err := c.Conn.Write(data); err != nil {
+				if _, err := c.GetTCPConnection().Write(data); err != nil {
 					zlog.Error("[Conn Write] Send Buff Data Error:", err, ", Conn Writer exit")
 					break
 				}
@@ -135,19 +135,19 @@ func (c *Connection) StartReader() {
 		default:
 			//设置读取数据流时间
 			if zconf.GlobalObject.MaxConnReadTime > 0 {
-				c.Conn.SetReadDeadline(time.Now().Add(time.Second * time.Duration(zconf.GlobalObject.MaxConnReadTime)))
+				c.GetTCPConnection().SetReadDeadline(time.Now().Add(time.Second * time.Duration(zconf.GlobalObject.MaxConnReadTime)))
 			}
 
 			//读取客户端的Msg head
 			msgHeadBuffer := pool.PoolGet()
-			if _, err := io.ReadFull(c.Conn, msgHeadBuffer); err != nil {
+			if _, err := io.ReadFull(c.GetTCPConnection(), msgHeadBuffer); err != nil {
 				pool.PoolPut(msgHeadBuffer)
 				zlog.Errorf(`[Conn Read] Read Msg Head Error:%v, Address:%v`, err, c.GetRemoteAddr())
 				return
 			}
 
 			//拆包:得到msgID和datalen放在msg中
-			msg, err := c.TCPServer.Packet().UnPack(msgHeadBuffer)
+			msg, err := c.GetTCPServer().Packet().UnPack(msgHeadBuffer)
 			if err != nil {
 				pool.PoolPut(msgHeadBuffer)
 				zlog.Errorf(`[Conn Read] Unpack Error:%v, Address:%v`, err, c.GetRemoteAddr())
@@ -155,14 +155,14 @@ func (c *Connection) StartReader() {
 			}
 
 			//根据dataLen读取data,放在msg.Data中
-			if msg.GetMsgLen() < c.TCPServer.Packet().GetHeadLen() {
+			if msg.GetMsgLen() < c.GetTCPServer().Packet().GetHeadLen() {
 				pool.PoolPut(msgHeadBuffer)
 				continue
 			}
 			var msgBodyBuffer []byte
 			if msg.GetMsgLen() > 0 {
-				msgBodyBuffer = make([]byte, msg.GetMsgLen()-c.TCPServer.Packet().GetHeadLen())
-				if _, err := io.ReadFull(c.Conn, msgBodyBuffer); err != nil {
+				msgBodyBuffer = make([]byte, msg.GetMsgLen()-c.GetTCPServer().Packet().GetHeadLen())
+				if _, err := io.ReadFull(c.GetTCPConnection(), msgBodyBuffer); err != nil {
 					pool.PoolPut(msgHeadBuffer)
 					zlog.Error("[Conn Read] Read Msg Data Error:", err)
 					return
@@ -183,10 +183,10 @@ func (c *Connection) StartReader() {
 
 			if zconf.GlobalObject.WorkerPoolSize > 0 {
 				//已经启动工作池机制，将消息交给Worker处理
-				c.MsgHandler.SendMsgToTaskQueue(req)
+				c.msgHandler.SendMsgToTaskQueue(req)
 			} else {
 				//从绑定好的消息和对应的处理方法中执行对应的Handle方法
-				go c.MsgHandler.DoMsgHandler(req)
+				go c.msgHandler.DoMsgHandler(req)
 			}
 		}
 	}
@@ -218,7 +218,7 @@ func (c *Connection) Start() {
 	go c.StartWriter()
 
 	//按照用户传递进来的创建连接时需要处理的业务，执行钩子方法
-	c.TCPServer.CallOnConnStart(c)
+	c.GetTCPServer().CallOnConnStart(c)
 
 	select {
 	case <-c.ctx.Done():
@@ -234,17 +234,22 @@ func (c *Connection) Stop() {
 
 // GetTCPServer 获取TCPServer
 func (c *Connection) GetTCPServer() ziface.IServer {
-	return c.TCPServer
+	return c.tcpServer
 }
 
 // GetTCPConnection 从当前连接获取原始的socket TCPConn
 func (c *Connection) GetTCPConnection() *net.TCPConn {
-	return c.Conn
+	return c.conn
 }
 
 // GetConnID 获取当前连接ID
 func (c *Connection) GetConnID() uint64 {
-	return c.ConnID
+	return c.connID
+}
+
+// GetMsgHandler 获取消息处理器
+func (c *Connection) GetMsgHandler() ziface.IMsgHandle {
+	return c.msgHandler
 }
 
 // RemoteAddr 获取远程客户端地址信息
@@ -277,7 +282,7 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 	}
 
 	//将data封包，并且发送
-	dp := c.TCPServer.Packet()
+	dp := c.GetTCPServer().Packet()
 	msg, err := dp.Pack(NewMessage(msgID, data))
 	if err != nil {
 		zlog.Error("[Conn SendMsg] Pack error msg ID:", msgID, ", err:", err)
@@ -286,9 +291,9 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 
 	//写回客户端: 设置写入数据流时间(100毫秒)
 	if zconf.GlobalObject.MaxConnWriteTime > 0 {
-		c.Conn.SetWriteDeadline(time.Now().Add(time.Duration(zconf.GlobalObject.MaxConnWriteTime) * time.Millisecond))
+		c.GetTCPConnection().SetWriteDeadline(time.Now().Add(time.Duration(zconf.GlobalObject.MaxConnWriteTime) * time.Millisecond))
 	}
-	_, err = c.Conn.Write(msg)
+	_, err = c.GetTCPConnection().Write(msg)
 
 	return err
 }
@@ -306,7 +311,7 @@ func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
 	}
 
 	//将data封包，并且发送
-	dp := c.TCPServer.Packet()
+	dp := c.GetTCPServer().Packet()
 	msg, err := dp.Pack(NewMessage(msgID, data))
 	if err != nil {
 		zlog.Error("[Conn SendBuffMsg] Pack error msg ID = ", msgID, " Err: ", err)
@@ -398,14 +403,6 @@ func (c *Connection) GetServerId() uint32 {
 	return cast.ToUint32(c.GetProperty("server_id"))
 }
 
-// SetUIN 帐号ID
-func (c *Connection) SetUIN(uin uint64) {
-	c.SetProperty("uin", uin)
-}
-func (c *Connection) GetUIN() uint64 {
-	return cast.ToUint64(c.GetProperty("uin"))
-}
-
 // SetUserId 玩家ID
 func (c *Connection) SetUserId(userId uint64) {
 	c.userId = userId
@@ -419,7 +416,7 @@ func (c *Connection) finalizer() {
 	defer c.msgLock.Unlock()
 
 	//如果用户注册了该链接的关闭回调业务,那么在此刻应该显示调用
-	c.TCPServer.CallOnConnStop(c)
+	c.GetTCPServer().CallOnConnStop(c)
 
 	//如果当前链接已经关闭
 	if c.isClosed == true {
@@ -432,9 +429,9 @@ func (c *Connection) finalizer() {
 	}
 
 	//关闭socket链接
-	c.Conn.Close()
+	c.GetTCPConnection().Close()
 	//将链接从连接管理器中删除
-	c.TCPServer.GetConnMgr().Remove(c)
+	c.GetTCPServer().GetConnMgr().Remove(c)
 	//关闭该链接全部管道
 	if c.msgBuffChan != nil {
 		close(c.msgBuffChan)
@@ -442,7 +439,7 @@ func (c *Connection) finalizer() {
 	//设置标志位
 	c.isClosed = true
 
-	zlog.Infof(`[Conn Finalizer] Conn Stop ConnID:%v, UserID:%v, Address:%v`, c.ConnID, c.GetUserId(), c.GetRemoteAddr())
+	zlog.Infof(`[Conn Finalizer] Conn Stop ConnID:%v, UserID:%v, Address:%v`, c.GetConnID(), c.GetUserId(), c.GetRemoteAddr())
 }
 
 // Deadline

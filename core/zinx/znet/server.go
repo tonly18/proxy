@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-//Server 接口实现，定义一个Server服务类
+// Server 接口实现，定义一个Server服务类
 type Server struct {
 	//服务器ID
 	ID uint32
@@ -44,7 +44,7 @@ type Server struct {
 	hc ziface.IHeartbeatChecker
 }
 
-//NewServer 创建一个服务器句柄
+// NewServer 创建一个服务器句柄
 func NewServer() ziface.IServer {
 	s := &Server{
 		ID:         zconf.GlobalObject.ServerID,
@@ -73,7 +73,7 @@ func (s *Server) StartConn(conn ziface.IConnection) {
 	conn.Start()
 }
 
-//Start 开启网络服务
+// Start 开启网络服务
 func (s *Server) Start() {
 	//0 启动worker工作池机制
 	s.msgHandler.StartWorkerPool()
@@ -119,7 +119,7 @@ func (s *Server) Start() {
 
 			//3.3 处理该新连接请求的业务方法,此时应该有handler和conn是绑定的
 			cid := atomic.AddUint64(&s.connId, 1)
-			dealConn := NewConnection(s, conn, cid, s.msgHandler)
+			dealConn := NewConnection(s, conn, cid)
 
 			//3.4 启动当前链接的处理业务
 			go s.StartConn(dealConn)
@@ -135,7 +135,7 @@ func (s *Server) Start() {
 	}
 }
 
-//Stop 停止服务
+// Stop 停止服务
 func (s *Server) Stop() {
 	zlog.Info("[TCP SERVER STOP] Server Name:", s.Name)
 
@@ -146,7 +146,7 @@ func (s *Server) Stop() {
 	s.canel()
 }
 
-//Serve 运行服务
+// Serve 运行服务
 func (s *Server) Serve() {
 	s.Start()
 
@@ -157,34 +157,34 @@ func (s *Server) Serve() {
 	}
 }
 
-//AddRouter 路由功能：给当前服务注册一个路由业务方法，供客户端链接处理使用
+// AddRouter 路由功能：给当前服务注册一个路由业务方法，供客户端链接处理使用
 func (s *Server) AddRouter(msgID uint32, router ziface.IRouter) {
 	s.msgHandler.AddRouter(msgID, router)
 }
 
-//GetConnMgr 得到链接管理
+// GetConnMgr 得到链接管理
 func (s *Server) GetConnMgr() ziface.IConnManager {
 	return s.ConnMgr
 }
 
-//SetOnConnStart 设置该Server的连接创建时Hook函数
+// SetOnConnStart 设置该Server的连接创建时Hook函数
 func (s *Server) SetOnConnStart(hookFunc func(ziface.IConnection)) {
 	s.OnConnStart = hookFunc
 }
 
-//SetOnConnStop 设置该Server的连接断开时的Hook函数
+// SetOnConnStop 设置该Server的连接断开时的Hook函数
 func (s *Server) SetOnConnStop(hookFunc func(ziface.IConnection)) {
 	s.OnConnStop = hookFunc
 }
 
-//CallOnConnStart 调用连接OnConnStart Hook函数
+// CallOnConnStart 调用连接OnConnStart Hook函数
 func (s *Server) CallOnConnStart(conn ziface.IConnection) {
 	if s.OnConnStart != nil {
 		s.OnConnStart(conn)
 	}
 }
 
-//CallOnConnStop 调用连接OnConnStop Hook函数
+// CallOnConnStop 调用连接OnConnStop Hook函数
 func (s *Server) CallOnConnStop(conn ziface.IConnection) {
 	if s.OnConnStop != nil {
 		s.OnConnStop(conn)
@@ -199,7 +199,12 @@ func (s *Server) GetID() uint32 {
 	return s.ID
 }
 
-//StartHeartBeat 启动心跳检测interval 每次发送心跳的时间间隔
+// 获取Server绑定的消息处理模块
+func (s *Server) GetMsgHandler() ziface.IMsgHandle {
+	return s.msgHandler
+}
+
+// StartHeartBeat 启动心跳检测interval 每次发送心跳的时间间隔
 func (s *Server) StartHeartBeat(interval time.Duration) {
 	checker := NewHeartbeatChecker(interval)
 

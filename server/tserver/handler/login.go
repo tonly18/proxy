@@ -25,10 +25,6 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	//	request.GetConnection().Stop()
 	//	return fmt.Errorf(`[login handler] unpack error: %v`, err)
 	//}
-	//if msg.GetUin() == nil {
-	//	request.GetConnection().Stop()
-	//	return errors.New("[login handler] msg uin is nil")
-	//}
 	//if msg.GetServer() == nil {
 	//	request.GetConnection().Stop()
 	//	return errors.New("[login handler] msg server id is nil")
@@ -54,7 +50,6 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	//}
 	//
 	////处理返回数据
-	//uin := cast.ToUint64(resp.GetDataFromHeader("uin"))            //帐号ID(一个帐号ID对应多个玩家ID)
 	//userId := cast.ToUint64(resp.GetDataFromHeader("user_id"))     //玩家ID
 	//serverId := cast.ToUint32(resp.GetDataFromHeader("server_id")) //区服ID
 	//if uin == 0 || userId == 0 || serverId == 0 {
@@ -66,7 +61,6 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	conn := request.GetConnection()
 	//conn.SetProxyId(conn.GetTCPServer().GetID()) //网关ID
 	//conn.SetServerId(serverId)                   //区服ID
-	//conn.SetUIN(uin)                             //帐号ID
 	//conn.SetUserId(userId)                       //玩家ID
 
 	//添加登录后的玩家到connManager
