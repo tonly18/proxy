@@ -59,8 +59,8 @@ type Connection struct {
 	lastActivityTime time.Time
 	//心跳检测器
 	hc ziface.IHeartbeatChecker
-	//是否是被踢
-	kickOut int8 //0不是|1是
+	//是否是被踢: 0不是|1是
+	kickOut int8
 }
 
 // NewConnection 创建连接的方法
