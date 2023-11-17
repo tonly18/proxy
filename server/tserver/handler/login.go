@@ -67,7 +67,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	userId := uint64(111)
 	conn.SetUserId(userId)
 	fmt.Println("login===========")
-	if connection, _ := conn.GetTCPServer().GetConnMgr().GetConnByUserId(userId); connection != nil {
+	if connection, _ := conn.GetConnMgr().GetConnByUserId(userId); connection != nil {
 		fmt.Println("login2222222===========")
 		//踢掉原connection,并推送消息给客户端
 		downMsg := pack.NewMessageDown(global.CMD_DOWN_KICK_OUT, 0, []byte("kick out"))
@@ -80,13 +80,13 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 				return err
 			}
 		}
-		connection.GetTCPServer().GetConnMgr().Remove(connection)
+		connection.GetConnMgr().Remove(connection)
 		connection.SetKickOut(1)
 		connection.Stop()
 	}
 
 	//把conn添加到players
-	if err := conn.GetTCPServer().GetConnMgr().AddConnByUserId(conn); err != nil {
+	if err := conn.GetConnMgr().AddConnByUserId(conn); err != nil {
 		logger.Errorf(request, `[login handler] GetConnMgr.AddConnByUserId. error: %v`, err)
 		return err
 	}

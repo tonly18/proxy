@@ -29,6 +29,7 @@ type IConnection interface {
 	GetTCPServer() IServer          //获取当前链接对应的server
 	GetTCPConnection() *net.TCPConn //从当前连接获取原始的socket TCPConn
 	GetConnID() uint64              //获取当前连接ID
+	GetConnMgr() IConnManager       //获取connection管理器
 	GetMsgHandler() IMsgHandle      //获取消息处理器
 	GetRemoteAddr() net.Addr        //获取远程客户端地址信息
 	GetLocalAddr() net.Addr         //获取服务端地址信息
@@ -57,9 +58,8 @@ type IConnection interface {
 	Err() error
 	Value(any) any
 
-	GetCreateTime() int32 //链接创建时间
-
 	IsAlive() bool                   //判断当前连接是否存活
+	GetCreateTime() int32            //链接创建时间
 	SetHeartBeat(IHeartbeatChecker)  //设置心跳检测器
 	GetHeartBeat() IHeartbeatChecker //获取心跳检测器
 

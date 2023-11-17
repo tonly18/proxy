@@ -9,7 +9,6 @@ import (
 	"proxy/core/zinx/ziface"
 	"proxy/library/logger"
 	"proxy/server/config"
-	"proxy/server/global"
 	"proxy/server/library"
 	"proxy/server/utils"
 	"strings"
@@ -32,7 +31,7 @@ func (t *PublicRouter) Handle(request ziface.IRequest) error {
 	}
 
 	//获取玩家connection
-	conn, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(userId)
+	conn, err := request.GetConnection().GetConnMgr().GetConnByUserId(userId)
 	if err != nil {
 		return fmt.Errorf(`[Public Handle] player not exist. error: %w`, err)
 	}
@@ -82,7 +81,7 @@ func (t *PublicRouter) Handle(request ziface.IRequest) error {
 		}
 	}
 	for _, v := range playerIds {
-		connection, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(v)
+		connection, err := conn.GetConnMgr().GetConnByUserId(v)
 		if err != nil { //玩家不存在
 			logger.Errorf(request, `[Public Handle] player not exist. userId:%v, length:%d, error:%v`, v, len(downRawData), err)
 			continue

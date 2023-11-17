@@ -36,10 +36,8 @@ func (h *TestRouter) Handle(request ziface.IRequest) error {
 	conn := request.GetConnection()
 	fmt.Println("conn-hc::::::", conn.GetHeartBeat())
 
-	PushMessage(request, 101, 0, []byte("a-202311161930-b"))
-
 	//return fmt.Errorf("handler is error")
-	return nil
+	return PushMessage(request, 101, 0, []byte("a-20231117000000-b"))
 }
 
 func (h *TestRouter) PostHandle(request ziface.IRequest) error {

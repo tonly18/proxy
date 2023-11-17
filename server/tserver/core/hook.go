@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"github.com/tonly18/httpclient"
 	"proxy/core/zinx/ziface"
@@ -12,7 +13,10 @@ import (
 // OnConnStartFunc 上线
 func OnConnStartFunc(conn ziface.IConnection) {
 	//玩家在线数
-	userOnLineNumber := conn.GetTCPServer().GetConnMgr().Len()
+	userOnLineNumber := conn.GetConnMgr().Len()
+
+	logger.Info(context.Background(), "OnConnStartFunc. userOnLineNumber:", userOnLineNumber)
+	return
 
 	//call http server
 	url := fmt.Sprintf(`%v%v`, library.NewPoll().Get(), config.HttpConfig.GameServerOnOffLineAPI)
@@ -39,12 +43,15 @@ func OnConnStartFunc(conn ziface.IConnection) {
 
 // OnConnStopFunc 下线
 func OnConnStopFunc(conn ziface.IConnection) {
-	userOnLineNumber := conn.GetTCPServer().GetConnMgr().Len() //玩家在线数
+	userOnLineNumber := conn.GetConnMgr().Len() //玩家在线数
 	proxyId := conn.GetTCPServer().GetID()
 	serverId := conn.GetServerId()
 	userId := conn.GetUserId()
 	clientId := conn.GetRemoteIP()
 	socketId := conn.GetConnID()
+
+	logger.Info(context.Background(), "OnConnStopFunc. userOnLineNumber:", userOnLineNumber)
+	return
 
 	//call http server
 	url := fmt.Sprintf(`%v%v`, library.NewPoll().Get(), config.HttpConfig.GameServerOnOffLineAPI)

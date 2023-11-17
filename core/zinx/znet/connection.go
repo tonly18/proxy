@@ -3,6 +3,7 @@ package znet
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/spf13/cast"
 	"io"
 	"net"
@@ -42,6 +43,12 @@ type Connection struct {
 	propertyLock sync.Mutex
 	//当前连接的关闭状态
 	isClosed bool
+	//当前链接是属于哪个Connection Manager
+	connManager ziface.IConnManager
+	//当前连接创建时Hook函数
+	onConnStart func(ziface.IConnection)
+	//当前连接断开时的Hook函数
+	onConnStop func(ziface.IConnection)
 	//当前链接的远程地址
 	remoteAddr net.Addr
 	//当前链接的本地地址
@@ -64,16 +71,19 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64) zifa
 		conn:        conn,
 		connID:      connID,
 		isClosed:    false,
+		connManager: server.GetConnMgr(),
 		msgHandler:  server.GetMsgHandler(),
 		msgBuffChan: make(chan []byte, zconf.GlobalObject.MaxMsgChanLen),
 		property:    make(map[string]any),
+		onConnStart: server.GetOnConnStart(),
+		onConnStop:  server.GetOnConnStop(),
 		remoteAddr:  conn.RemoteAddr(),
 		localAddr:   conn.LocalAddr(),
 		createTime:  int32(time.Now().Unix()),
 	}
 
 	//将新创建的Conn添加到链接管理中
-	c.GetTCPServer().GetConnMgr().Add(c)
+	c.connManager.Add(c)
 
 	//return
 	return c
@@ -217,8 +227,8 @@ func (c *Connection) Start() {
 	//2 开启用于写回客户端数据流程的Goroutine
 	go c.StartWriter()
 
-	//按照用户传递进来的创建连接时需要处理的业务，执行钩子方法
-	c.GetTCPServer().CallOnConnStart(c)
+	//按照用户传递进来的创建连接时需要处理的业务,执行钩子方法
+	c.callOnConnStart()
 
 	select {
 	case <-c.ctx.Done():
@@ -245,6 +255,10 @@ func (c *Connection) GetTCPConnection() *net.TCPConn {
 // GetConnID 获取当前连接ID
 func (c *Connection) GetConnID() uint64 {
 	return c.connID
+}
+
+func (c *Connection) GetConnMgr() ziface.IConnManager {
+	return c.connManager
 }
 
 // GetMsgHandler 获取消息处理器
@@ -298,7 +312,7 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 	return err
 }
 
-// SendBuffMsg  发生BuffMsg
+// SendBuffMsg 发生BuffMsg
 func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
 	c.msgLock.RLock()
 	defer c.msgLock.RUnlock()
@@ -332,7 +346,7 @@ func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
 	return nil
 }
 
-// SendByteMsg  发生BuffMsg
+// SendByteMsg 发生BuffMsg
 func (c *Connection) SendByteMsg(data []byte) error {
 	//lock
 	c.msgLock.RLock()
@@ -382,7 +396,7 @@ func (c *Connection) RemoveProperty(key string) {
 	delete(c.property, key)
 }
 
-// Context 返回ctx，用于用户自定义的go程获取连接退出状态
+// Context 返回ctx,用于用户自定义的go程获取连接退出状态
 func (c *Connection) Context() context.Context {
 	return c.ctx
 }
@@ -416,7 +430,7 @@ func (c *Connection) finalizer() {
 	defer c.msgLock.Unlock()
 
 	//如果用户注册了该链接的关闭回调业务,那么在此刻应该显示调用
-	c.GetTCPServer().CallOnConnStop(c)
+	c.callOnConnStop()
 
 	//如果当前链接已经关闭
 	if c.isClosed == true {
@@ -431,11 +445,15 @@ func (c *Connection) finalizer() {
 	//关闭socket链接
 	c.GetTCPConnection().Close()
 	//将链接从连接管理器中删除
-	c.GetTCPServer().GetConnMgr().Remove(c)
+	if c.connManager != nil {
+		c.connManager.Remove(c)
+	}
+
 	//关闭该链接全部管道
 	if c.msgBuffChan != nil {
 		close(c.msgBuffChan)
 	}
+
 	//设置标志位
 	c.isClosed = true
 
@@ -474,6 +492,20 @@ func (c *Connection) Value(key any) any {
 // GetCreateTime 链接创建时间
 func (c *Connection) GetCreateTime() int32 {
 	return c.createTime
+}
+
+func (c *Connection) callOnConnStart() {
+	if c.onConnStart != nil {
+		zlog.Info("callOnConnStart, remote Addr:%v, conn id:%v", c.GetRemoteAddr(), c.GetConnID())
+		c.onConnStart(c)
+	}
+}
+
+func (c *Connection) callOnConnStop() {
+	if c.onConnStop != nil {
+		zlog.Info(fmt.Sprintf("callOnConnStop, remote Addr:%v, conn id:%v, user id:%v", c.GetRemoteAddr(), c.GetConnID(), c.GetUserId()))
+		c.onConnStop(c)
+	}
 }
 
 func (c *Connection) IsAlive() bool {
