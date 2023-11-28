@@ -8,21 +8,21 @@ import (
 	"proxy/core/zinx/ziface"
 )
 
-//MessagePack 封包拆包类实例，暂时不需要成员
+// MessagePack 封包拆包类实例，暂时不需要成员
 type MessagePack struct{}
 
-//MessagePack 封包拆包实例初始化方法
+// MessagePack 封包拆包实例初始化方法
 func NewMessagePack() ziface.Packet {
 	return &MessagePack{}
 }
 
-//获取包头长度方法:存储二进制数据流总长度
+// 获取包头长度方法:存储二进制数据流总长度
 func (dp *MessagePack) GetHeadLen() uint32 {
 	//包头长度: msgLen: uint32(4字节) + cmd: uint32(4字节)
 	return 8
 }
 
-//Pack 打包方法(压缩数据)
+// Pack 打包方法(压缩数据)
 func (dp *MessagePack) Pack(msg ziface.IMessage) ([]byte, error) {
 	//创建一个存放bytes字节的缓冲
 	dataBuff := bytes.NewBuffer([]byte{})
@@ -43,7 +43,7 @@ func (dp *MessagePack) Pack(msg ziface.IMessage) ([]byte, error) {
 	return dataBuff.Bytes(), nil
 }
 
-//UnPack 拆包方法(解压数据)
+// UnPack 拆包方法(解压数据)
 func (dp *MessagePack) UnPack(binaryData []byte) (ziface.IMessage, error) {
 	//创建一个从输入二进制数据的ioReader
 	dataBuff := bytes.NewReader(binaryData)
@@ -56,7 +56,7 @@ func (dp *MessagePack) UnPack(binaryData []byte) (ziface.IMessage, error) {
 		return nil, err
 	}
 
-	//读消息ID
+	//读cmd:消息ID
 	if err := binary.Read(dataBuff, binary.LittleEndian, &msg.Cmd); err != nil {
 		return nil, err
 	}

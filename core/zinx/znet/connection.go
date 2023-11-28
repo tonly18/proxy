@@ -148,38 +148,29 @@ func (c *Connection) StartReader() {
 				c.GetTCPConnection().SetReadDeadline(time.Now().Add(time.Second * time.Duration(zconf.GlobalObject.MaxConnReadTime)))
 			}
 
-			//读取客户端的Msg head
+			//读取message head
 			msgHeadBuffer := pool.PoolGet()
 			if _, err := io.ReadFull(c.GetTCPConnection(), msgHeadBuffer); err != nil {
 				pool.PoolPut(msgHeadBuffer)
 				zlog.Errorf(`[Conn Read] Read Msg Head Error:%v, Address:%v`, err, c.GetRemoteAddr())
 				return
 			}
-
-			//拆包:得到msgID和datalen放在msg中
+			//拆包:得到datalen、cmd放在msg中
 			msg, err := c.GetTCPServer().Packet().UnPack(msgHeadBuffer)
+			pool.PoolPut(msgHeadBuffer)
 			if err != nil {
-				pool.PoolPut(msgHeadBuffer)
 				zlog.Errorf(`[Conn Read] Unpack Error:%v, Address:%v`, err, c.GetRemoteAddr())
 				return
 			}
-
 			//根据dataLen读取data,放在msg.Data中
-			if msg.GetMsgLen() < c.GetTCPServer().Packet().GetHeadLen() {
-				pool.PoolPut(msgHeadBuffer)
-				continue
-			}
-			var msgBodyBuffer []byte
-			if msg.GetMsgLen() > 0 {
-				msgBodyBuffer = make([]byte, msg.GetMsgLen()-c.GetTCPServer().Packet().GetHeadLen())
+			if msg.GetMsgLen() > c.GetTCPServer().Packet().GetHeadLen() {
+				msgBodyBuffer := make([]byte, msg.GetMsgLen()-c.GetTCPServer().Packet().GetHeadLen())
 				if _, err := io.ReadFull(c.GetTCPConnection(), msgBodyBuffer); err != nil {
-					pool.PoolPut(msgHeadBuffer)
 					zlog.Error("[Conn Read] Read Msg Data Error:", err)
 					return
 				}
+				msg.SetData(msgBodyBuffer) //设置message body
 			}
-			msg.SetRawData(msgHeadBuffer, msgBodyBuffer) //设置原始二进制流和data
-			pool.PoolPut(msgHeadBuffer)
 
 			//正常读取到对端数据,更新心跳检测Active状态
 			if c.hc != nil {
@@ -188,9 +179,9 @@ func (c *Connection) StartReader() {
 
 			//Request 得到当前客户端请求的Request数据
 			req := NewRequest(c, msg)
-			//设置链路追踪ID
-			req.SetTraceId(command.GenTraceID())
+			req.SetTraceId(command.GenTraceID()) //设置链路追踪ID
 
+			//执行request
 			if zconf.GlobalObject.WorkerPoolSize > 0 {
 				//已经启动工作池机制，将消息交给Worker处理
 				c.msgHandler.SendMsgToTaskQueue(req)

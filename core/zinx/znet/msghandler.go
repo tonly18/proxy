@@ -17,7 +17,7 @@ type MsgHandle struct {
 }
 
 // NewMsgHandle 创建MsgHandle
-func NewMsgHandle() *MsgHandle {
+func NewMsgHandle() ziface.IMsgHandle {
 	return &MsgHandle{
 		Apis:           make(map[uint32]ziface.IRouter),
 		WorkerPoolSize: zconf.GlobalObject.WorkerPoolSize,
@@ -56,7 +56,7 @@ func (mh *MsgHandle) DoMsgHandler(request ziface.IRequest) {
 	//handler
 	handler, ok := mh.Apis[request.GetMsgID()]
 	if !ok {
-		logger.Errorf(request, `[DoMsgHandler Handler] API MsgID(%v) not found`, request.GetMsgID())
+		logger.Errorf(request, `[DoMsgHandler Handler] message handler API not found, MsgID:`, request.GetMsgID())
 		return
 	}
 

@@ -10,8 +10,8 @@ type IMessageDown interface {
 	GetCmd() uint32 //获取cmd数据
 	SetCmd(uint32)  //设置cmd数据
 
-	GetCode() uint32 //获取Mode数据
-	SetCode(uint32)  //设置Mode数据
+	GetCode() uint32 //获取code数据
+	SetCode(uint32)  //设置code数据
 
 	SetData([]byte)  //设置Data
 	GetData() []byte //获取Data

@@ -60,7 +60,7 @@ func testServer(conn net.Conn) {
 		ReadFromConn(conn)
 	}()
 
-	upMsg := pack.NewMessageUp(0, []byte("1234567890"))
+	upMsg := pack.NewMessageUp(110, []byte("abcdefg"))
 	fmt.Println("upMsg.MsgLen:::::::::::::::::", upMsg.GetMsgLen())
 	fmt.Println("upMsg.cmd::::::::::::::::::::", upMsg.GetCmd())
 	fmt.Println("upMsg.data:::::::::::::::::::", string(upMsg.GetData()))
