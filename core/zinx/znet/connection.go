@@ -487,7 +487,7 @@ func (c *Connection) GetCreateTime() int32 {
 
 func (c *Connection) callOnConnStart() {
 	if c.onConnStart != nil {
-		zlog.Info("callOnConnStart, remote Addr:%v, conn id:%v", c.GetRemoteAddr(), c.GetConnID())
+		zlog.Info(fmt.Sprintf("callOnConnStart, remote Addr:%v, conn id:%v", c.GetRemoteAddr(), c.GetConnID()))
 		c.onConnStart(c)
 	}
 }
