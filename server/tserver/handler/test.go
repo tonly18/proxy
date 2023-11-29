@@ -33,6 +33,8 @@ func (h *TestRouter) Handle(request ziface.IRequest) error {
 	tcpServer := request.GetConnection().GetTCPServer()
 	fmt.Println("server-hc::::::", tcpServer.GetHeartBeat())
 
+	panic("test panic")
+
 	conn := request.GetConnection()
 	fmt.Println("conn-hc::::::", conn.GetHeartBeat())
 
