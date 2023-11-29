@@ -155,7 +155,7 @@ func (c *Connection) StartReader() {
 				zlog.Errorf(`[Conn Read] Read Msg Head Error:%v, Address:%v`, err, c.GetRemoteAddr())
 				return
 			}
-			//拆包:得到datalen、cmd放在msg中
+			//拆包:得到datalen、cmd并放在msg中
 			msg, err := c.GetTCPServer().Packet().UnPack(msgHeadBuffer)
 			pool.PoolPut(msgHeadBuffer)
 			if err != nil {
