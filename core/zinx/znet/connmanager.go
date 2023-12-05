@@ -64,12 +64,6 @@ func (connMgr *ConnManager) Get(connID uint64) (ziface.IConnection, error) {
 	if conn, ok := connMgr.connections[connID]; ok {
 		return conn, nil
 	}
-	for uid, cid := range connMgr.players {
-		if cid == connID {
-			delete(connMgr.players, uid)
-			break
-		}
-	}
 
 	return nil, errors.New("connection not found")
 }
@@ -113,8 +107,6 @@ func (connMgr *ConnManager) GetConnByUserId(userId uint64) (ziface.IConnection, 
 	if connID, ok := connMgr.players[userId]; ok {
 		if conn, exist := connMgr.connections[connID]; exist {
 			return conn, nil
-		} else {
-			delete(connMgr.players, userId)
 		}
 	}
 
@@ -123,8 +115,8 @@ func (connMgr *ConnManager) GetConnByUserId(userId uint64) (ziface.IConnection, 
 
 // AddConnByUserId 添加到players
 func (connMgr *ConnManager) AddConnByUserId(conn ziface.IConnection) error {
-	connMgr.connLock.RLock()
-	defer connMgr.connLock.RUnlock()
+	connMgr.connLock.Lock()
+	defer connMgr.connLock.Unlock()
 
 	//未登录
 	if conn.GetUserId() < 1 {
@@ -141,8 +133,8 @@ func (connMgr *ConnManager) AddConnByUserId(conn ziface.IConnection) error {
 }
 
 // PlayerLen 获取当前连接
-func (connMgr *ConnManager) PlayerLen() int {
-	connMgr.connLock.RLock()
+func (connMgr *ConnManager) GetOnLinePlayer() int {
+	connMgr.connLock.Lock()
 	//在线人数
 	length := len(connMgr.players)
 
@@ -164,7 +156,7 @@ func (connMgr *ConnManager) PlayerLen() int {
 		length = len(connMgr.players)
 	}
 
-	connMgr.connLock.RUnlock()
+	connMgr.connLock.Unlock()
 
 	return length
 }

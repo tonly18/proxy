@@ -1,11 +1,11 @@
-// Package ziface 主要提供zinx全部抽象层接口定义.
-// 包括:
-//		IServer 服务mod接口
-//		IRouter 路由mod接口
-//		IConnection 连接mod层接口
-//      IMessage 消息mod接口
-//		IDataPack 消息拆解接口
-//      IMsgHandler 消息处理及协程池接口
+// Package ziface 主要提供zinx全部抽象层接口定义
+//
+//	IServer 服务mod接口
+//	IRouter 路由mod接口
+//	IConnection 连接mod层接口
+//	IMessage 消息mod接口
+//	IDataPack 消息拆解接口
+//	IMsgHandler 消息处理及协程池接口
 //
 // 当前文件描述:
 // @Title  iconnmanager.go
@@ -14,7 +14,7 @@
 package ziface
 
 /*
-	连接管理抽象层
+连接管理抽象层
 */
 type IConnManager interface {
 	Add(IConnection)                 //添加链接
@@ -25,5 +25,5 @@ type IConnManager interface {
 
 	GetConnByUserId(uint64) (IConnection, error)
 	AddConnByUserId(IConnection) error
-	PlayerLen() int //获取当前玩家
+	GetOnLinePlayer() int //获取当前在线玩家
 }
