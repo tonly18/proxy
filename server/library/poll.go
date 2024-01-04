@@ -6,7 +6,7 @@ import (
 )
 
 type Poll struct {
-	rw sync.RWMutex
+	mu sync.RWMutex
 
 	fd   int
 	data []string
@@ -24,24 +24,38 @@ func NewPoll() *Poll {
 }
 
 func (p *Poll) Set(url string) {
-	p.rw.Lock()
+	p.mu.Lock()
 	p.fd = 0
 	p.data = strings.Split(url, ";")
-	p.rw.Unlock()
+	p.mu.Unlock()
 }
 
+// 轮询host
 func (p *Poll) Get() string {
 	if len(p.data) == 0 {
 		return ""
 	}
 
-	p.rw.Lock()
+	p.mu.RLock()
 	url := p.data[p.fd]
 	p.fd++
 	if p.fd == len(p.data) {
 		p.fd = 0
 	}
-	p.rw.Unlock()
+	p.mu.RUnlock()
+
+	return url
+}
+
+// 按ID分配host
+func (p *Poll) GetByID(id int) string {
+	if len(p.data) == 0 {
+		return ""
+	}
+
+	p.mu.RLock()
+	url := p.data[id%len(p.data)]
+	p.mu.RUnlock()
 
 	return url
 }
