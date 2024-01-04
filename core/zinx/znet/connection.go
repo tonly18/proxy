@@ -14,6 +14,7 @@ import (
 	"proxy/library/pool"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -33,16 +34,14 @@ type Connection struct {
 	//有缓冲管道，用于读、写两个goroutine之间的消息通信
 	msgBuffChan chan []byte
 
-	//用户发消息的Lock
-	msgLock sync.RWMutex
 	//链接属性
 	property map[string]any
-	//玩家ID
-	userId uint64
 	//保护当前property的锁
 	propertyLock sync.Mutex
+	//玩家ID
+	userId uint64
 	//当前连接的关闭状态
-	isClosed bool
+	closed atomic.Bool
 	//当前链接是属于哪个Connection Manager
 	connManager ziface.IConnManager
 	//当前连接创建时Hook函数
@@ -59,8 +58,8 @@ type Connection struct {
 	lastActivityTime time.Time
 	//心跳检测器
 	hc ziface.IHeartbeatChecker
-	//是否是被踢: 0不是|1是
-	kickOut int8
+	//是否被踢: 0不是|1是
+	kickOut atomic.Int32
 }
 
 // NewConnection 创建连接的方法
@@ -70,7 +69,6 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64) zifa
 		tcpServer:   server,
 		conn:        conn,
 		connID:      connID,
-		isClosed:    false,
 		connManager: server.GetConnMgr(),
 		msgHandler:  server.GetMsgHandler(),
 		msgBuffChan: make(chan []byte, zconf.GlobalObject.MaxMsgChanLen),
@@ -81,6 +79,10 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64) zifa
 		localAddr:   conn.LocalAddr(),
 		createTime:  int32(time.Now().Unix()),
 	}
+
+	//property
+	c.closed.Store(false)
+	c.kickOut.Store(0)
 
 	//将新创建的Conn添加到链接管理中
 	c.connManager.Add(c)
@@ -279,10 +281,7 @@ func (c *Connection) GetRemotePort() string {
 
 // SendMsg 直接将Message数据发送数据给远程的TCP客户端
 func (c *Connection) SendMsg(msgID uint32, data []byte) error {
-	c.msgLock.RLock()
-	defer c.msgLock.RUnlock()
-
-	if c.isClosed == true {
+	if c.isClosed() == true {
 		return errors.New("connection closed when send msg")
 	}
 
@@ -305,15 +304,13 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 
 // SendBuffMsg 发生BuffMsg
 func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
-	c.msgLock.RLock()
-	defer c.msgLock.RUnlock()
-
-	idleTimeout := time.NewTimer(5 * time.Millisecond)
-	defer idleTimeout.Stop()
-
-	if c.isClosed == true {
+	if c.isClosed() == true {
 		return errors.New("connection closed when send buff msg")
 	}
+
+	//time out
+	idleTimeout := time.NewTimer(5 * time.Millisecond)
+	defer idleTimeout.Stop()
 
 	//将data封包，并且发送
 	dp := c.GetTCPServer().Packet()
@@ -339,17 +336,13 @@ func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
 
 // SendByteMsg 发生BuffMsg
 func (c *Connection) SendByteMsg(data []byte) error {
-	//lock
-	c.msgLock.RLock()
-	defer c.msgLock.RUnlock()
+	if c.isClosed() == true {
+		return errors.New("connection closed when send buff msg")
+	}
 
 	//time out
 	idleTimeout := time.NewTimer(5 * time.Millisecond)
 	defer idleTimeout.Stop()
-
-	if c.isClosed == true {
-		return errors.New("connection closed when send buff msg")
-	}
 
 	//发送超时
 	select {
@@ -417,16 +410,17 @@ func (c *Connection) GetUserId() uint64 {
 }
 
 func (c *Connection) finalizer() {
-	c.msgLock.Lock()
-	defer c.msgLock.Unlock()
+	//如果当前链接已经关闭
+	if c.isClosed() == true {
+		return
+	}
+	//关闭链接
+	if c.setClose() == false {
+		return
+	}
 
 	//如果用户注册了该链接的关闭回调业务,那么在此刻应该显示调用
 	c.callOnConnStop()
-
-	//如果当前链接已经关闭
-	if c.isClosed == true {
-		return
-	}
 
 	//停止心跳检测器
 	if c.hc != nil {
@@ -434,7 +428,7 @@ func (c *Connection) finalizer() {
 	}
 
 	//关闭socket链接
-	c.GetTCPConnection().Close()
+	_ = c.conn.Close()
 	//将链接从连接管理器中删除
 	if c.connManager != nil {
 		c.connManager.Remove(c)
@@ -444,9 +438,6 @@ func (c *Connection) finalizer() {
 	if c.msgBuffChan != nil {
 		close(c.msgBuffChan)
 	}
-
-	//设置标志位
-	c.isClosed = true
 
 	zlog.Infof(`[Conn Finalizer] Conn Stop ConnID:%v, UserID:%v, Address:%v`, c.GetConnID(), c.GetUserId(), c.GetRemoteAddr())
 }
@@ -500,9 +491,10 @@ func (c *Connection) callOnConnStop() {
 }
 
 func (c *Connection) IsAlive() bool {
-	if c.isClosed {
+	if c.isClosed() {
 		return false
 	}
+
 	//检查连接最后一次活动时间,如果超过心跳间隔,则认为连接已经死亡
 	return time.Now().Sub(c.lastActivityTime) < zconf.GlobalObject.HeartbeatMaxDuration()
 }
@@ -522,11 +514,21 @@ func (c *Connection) GetHeartBeat() ziface.IHeartbeatChecker {
 }
 
 // SetKickOut 设置是被被踢
-func (c *Connection) SetKickOut(kickout int8) {
-	c.kickOut = kickout
+func (c *Connection) SetKickOut() bool {
+	return c.kickOut.CompareAndSwap(0, 1)
 }
 
 // GetKickOut 获取是被被踢
-func (c *Connection) GetKickOut() int8 {
-	return c.kickOut
+func (c *Connection) GetKickOut() int32 {
+	return c.kickOut.Load()
+}
+
+// isClosed 链接是否已关闭
+func (c *Connection) isClosed() bool {
+	return c.closed.Load()
+}
+
+// setClose 关闭链接
+func (c *Connection) setClose() bool {
+	return c.closed.CompareAndSwap(false, true)
 }

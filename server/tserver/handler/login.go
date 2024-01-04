@@ -81,7 +81,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 			}
 		}
 		connection.GetConnMgr().Remove(connection)
-		connection.SetKickOut(1) //标识是被踢下线
+		_ = connection.SetKickOut() //标识是被踢下线
 		connection.Stop()
 	}
 
