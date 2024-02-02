@@ -8,7 +8,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cast v1.5.1
 	github.com/spf13/viper v1.12.0
-	github.com/tonly18/httpclient v1.0.3
+	github.com/tonly18/httpclient v1.0.5
 )
 
 require (
