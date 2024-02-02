@@ -203,7 +203,7 @@ func (c *Connection) Start() {
 	defer func() {
 		zlog.Infof(`[Conn Start] Goroutine is Exit! Addr:%v`, c.GetRemoteAddr())
 		if err := recover(); err != nil {
-			zlog.Infof(`[Conn Start] Goroutine is Exit! Addr:%v, Error:%v`, c.GetRemoteAddr(), err)
+			zlog.Errorf(`[Conn Start] Goroutine is Exit! Addr:%v, Error:%v`, c.GetRemoteAddr(), err)
 			for i := 1; i < 20; i++ {
 				if pc, file, line, ok := runtime.Caller(i); ok {
 					function := runtime.FuncForPC(pc).Name() //获取函数名
