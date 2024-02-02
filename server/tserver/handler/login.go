@@ -63,29 +63,29 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	//conn.SetServerId(serverId)                   //区服ID
 	//conn.SetUserId(userId)                       //玩家ID
 
-	//添加登录后的玩家到connManager
+	//判断玩家是否重复登录
 	userId := uint64(111)
 	conn.SetUserId(userId)
 	fmt.Println("login===========")
-	if connection, _ := conn.GetConnMgr().GetConnByUserId(userId); connection != nil {
+	if connOriginal, _ := conn.GetConnMgr().GetConnByUserId(userId); connOriginal != nil {
 		fmt.Println("login2222222===========")
 		//踢掉原connection,并推送消息给客户端
 		downMsg := pack.NewMessageDown(global.CMD_DOWN_KICK_OUT, 0, []byte("kick out"))
 		dp := pack.NewDataPackDown()
 		if downData, err := dp.Pack(downMsg); err != nil {
-			logger.Errorf(request, `[login handler] connection.SendByteMsg pack. error:%v`, err)
+			logger.Errorf(request, `[login handler] pb.pack. error:%v`, err)
 		} else {
-			if err := connection.SendByteMsg(downData); err != nil {
+			if err := connOriginal.SendByteMsg(downData); err != nil {
 				logger.Errorf(request, `[login handler] connection.SendByteMsg. error: %v`, err)
 				return err
 			}
 		}
-		connection.GetConnMgr().Remove(connection)
-		_ = connection.SetKickOut() //标识是被踢下线
-		connection.Stop()
+		connOriginal.GetConnMgr().Remove(connOriginal)
+		_ = connOriginal.SetKickOut() //标识是被踢下线
+		connOriginal.Stop()
 	}
 
-	//把conn添加到players
+	//把conn添加到connManager
 	if err := conn.GetConnMgr().AddConnByUserId(conn); err != nil {
 		logger.Errorf(request, `[login handler] GetConnMgr.AddConnByUserId. error: %v`, err)
 		return err

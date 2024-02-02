@@ -419,9 +419,6 @@ func (c *Connection) finalizer() {
 		return
 	}
 
-	//如果用户注册了该链接的关闭回调业务,那么在此刻应该显示调用
-	c.callOnConnStop()
-
 	//停止心跳检测器
 	if c.hc != nil {
 		c.hc.Stop()
@@ -439,6 +436,10 @@ func (c *Connection) finalizer() {
 		close(c.msgBuffChan)
 	}
 
+	//如果用户注册了该链接的关闭回调业务,那么在此刻应该显示调用
+	c.callOnConnStop()
+
+	//logger
 	zlog.Infof(`[Conn Finalizer] Conn Stop ConnID:%v, UserID:%v, Address:%v`, c.GetConnID(), c.GetUserId(), c.GetRemoteAddr())
 }
 

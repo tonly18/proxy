@@ -32,13 +32,13 @@ func OnConnStartFunc(conn ziface.IConnection) {
 		"socket_id": conn.GetConnID(),
 	}).Do()
 	if err != nil {
-		logger.Error(conn, "[OnConnStartFunc] player on line error: ", err, ", api: ", url)
+		logger.Error(conn, "[OnConnStartFunc] player on line fail error: ", err, ", api: ", url)
 	}
 	if resp.GetHeaderCode() != 200 {
-		logger.Error(conn, "[OnConnStartFunc] player on line error, code: ", resp.GetHeaderCode(), ", api: ", url)
+		logger.Error(conn, "[OnConnStartFunc] player on line fail, code: ", resp.GetHeaderCode(), ", api: ", url)
 	}
 
-	logger.Info(conn, "[OnConnStartFunc] player on line, conn id: ", conn.GetConnID(), ", userId:", conn.GetUserId())
+	logger.Info(conn, "[OnConnStartFunc] player on line success, conn id: ", conn.GetConnID(), ", userId:", conn.GetUserId())
 }
 
 // OnConnStopFunc 下线
@@ -67,11 +67,11 @@ func OnConnStopFunc(conn ziface.IConnection) {
 		"socket_id": socketId,
 	}).Do()
 	if err != nil {
-		logger.Error(conn, "[OnConnStopFunc] player off line error: ", err, ", api: ", url)
+		logger.Error(conn, "[OnConnStopFunc] player off line fail error: ", err, ", api: ", url)
 	}
 	if resp.GetHeaderCode() != 200 {
-		logger.Error(conn, "[OnConnStopFunc] player off line error, code: ", resp.GetHeaderCode(), ", api: ", url)
+		logger.Error(conn, "[OnConnStopFunc] player off line fail, code: ", resp.GetHeaderCode(), ", api: ", url)
 	}
 
-	logger.Info(conn, "[OnConnStopFunc] player off line, conn id: ", socketId, ", userId:", userId)
+	logger.Info(conn, "[OnConnStopFunc] player off line success, conn id: ", socketId, ", userId:", userId)
 }
