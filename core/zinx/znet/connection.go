@@ -12,6 +12,7 @@ import (
 	"proxy/core/zinx/zlog"
 	"proxy/library/command"
 	"proxy/library/pool"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -203,6 +204,12 @@ func (c *Connection) Start() {
 		zlog.Infof(`[Conn Start] Goroutine is Exit! Addr:%v`, c.GetRemoteAddr())
 		if err := recover(); err != nil {
 			zlog.Infof(`[Conn Start] Goroutine is Exit! Addr:%v, Error:%v`, c.GetRemoteAddr(), err)
+			for i := 1; i < 20; i++ {
+				if pc, file, line, ok := runtime.Caller(i); ok {
+					function := runtime.FuncForPC(pc).Name() //获取函数名
+					zlog.Errorf(`[Conn Start] goroutine:%v, file:%s, func:%s, line:%d`, pc, file, function, line)
+				}
+			}
 		}
 	}()
 

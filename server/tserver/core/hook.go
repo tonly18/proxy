@@ -33,6 +33,7 @@ func OnConnStartFunc(conn ziface.IConnection) {
 	}).Do()
 	if err != nil {
 		logger.Error(conn, "[OnConnStartFunc] player on line fail error: ", err, ", api: ", url)
+		return
 	}
 	if resp.GetHeaderCode() != 200 {
 		logger.Error(conn, "[OnConnStartFunc] player on line fail, code: ", resp.GetHeaderCode(), ", api: ", url)
@@ -68,6 +69,7 @@ func OnConnStopFunc(conn ziface.IConnection) {
 	}).Do()
 	if err != nil {
 		logger.Error(conn, "[OnConnStopFunc] player off line fail error: ", err, ", api: ", url)
+		return
 	}
 	if resp.GetHeaderCode() != 200 {
 		logger.Error(conn, "[OnConnStopFunc] player off line fail, code: ", resp.GetHeaderCode(), ", api: ", url)
