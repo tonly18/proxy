@@ -66,7 +66,7 @@ func (s *Signal) Waiter() error {
 func (s *Signal) Cannel() {
 	s.cancelFunc()
 	if zconf.ZINX_ENV == "prod" {
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 	} else {
 		time.Sleep(5 * time.Second)
 	}
