@@ -16,7 +16,7 @@ type ConnManager struct {
 }
 
 // NewConnManager 创建一个链接管理
-func NewConnManager() *ConnManager {
+func NewConnManager() ziface.IConnManager {
 	return &ConnManager{
 		connections: make(map[uint64]ziface.IConnection, zconf.GlobalObject.MaxConn),
 		players:     make(map[uint64]uint64, zconf.GlobalObject.MaxConn),
