@@ -67,6 +67,20 @@ func (connMgr *ConnManager) Get(connID uint64) (ziface.IConnection, error) {
 	return nil, errors.New("connection not found")
 }
 
+// GetByUserId 根据userId获取链接
+func (connMgr *ConnManager) GetByUserId(userId uint64) (ziface.IConnection, error) {
+	connMgr.connLock.RLock()
+	defer connMgr.connLock.RUnlock()
+
+	if connID, ok := connMgr.players[userId]; ok {
+		if conn, exist := connMgr.connections[connID]; exist {
+			return conn, nil
+		}
+	}
+
+	return nil, errors.New("connection not found")
+}
+
 // Len 获取当前连接
 func (connMgr *ConnManager) Len() int {
 	connMgr.connLock.RLock()
@@ -96,20 +110,6 @@ func (connMgr *ConnManager) ClearConn() {
 	connMgr.connLock.Unlock()
 
 	zlog.Info("[Conn Manager ClearConn] Clear All Connections successfully: conn num = ", connMgr.Len())
-}
-
-// GetConnByUserId 根据userId获取链接
-func (connMgr *ConnManager) GetConnByUserId(userId uint64) (ziface.IConnection, error) {
-	connMgr.connLock.RLock()
-	defer connMgr.connLock.RUnlock()
-
-	if connID, ok := connMgr.players[userId]; ok {
-		if conn, exist := connMgr.connections[connID]; exist {
-			return conn, nil
-		}
-	}
-
-	return nil, errors.New("connection not found")
 }
 
 // PlayerLen 获取当前连接
