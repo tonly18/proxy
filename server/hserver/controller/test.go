@@ -12,7 +12,7 @@ import (
 func TestController(w http.ResponseWriter, r *http.Request) {
 	userId := r.URL.Query().Get("user_id")
 	if userId != "" {
-		conn, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(cast.ToUint64(userId))
+		conn, err := global.GetTCPServer().GetConnMgr().GetByUserId(cast.ToUint64(userId))
 		if err != nil { //玩家不存在
 			writeResponseData(w, &server.Response{
 				Code: 2000,

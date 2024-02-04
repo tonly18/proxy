@@ -62,7 +62,7 @@ func WrapHandle(handler func(*server.Request) *server.Response) func(http.Respon
 		var conn ziface.IConnection
 		uid := cast.ToUint64(userId)
 		if uid > 0 {
-			connection, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(uid)
+			connection, err := global.GetTCPServer().GetConnMgr().GetByUserId(uid)
 			if err == nil && connection != nil {
 				conn = connection
 			}

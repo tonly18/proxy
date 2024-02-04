@@ -37,7 +37,7 @@ func PublicController(req *server.Request) *server.Response {
 
 	//向客户端发送消息
 	for _, uid := range playerIds {
-		conn, err := global.GetTCPServer().GetConnMgr().GetConnByUserId(uint64(uid))
+		conn, err := global.GetTCPServer().GetConnMgr().GetByUserId(uint64(uid))
 		if err != nil { //玩家不存在
 			logger.Errorf(req, `[http server public] player is not exist. user id:%v, error:%v`, uid, err)
 			continue

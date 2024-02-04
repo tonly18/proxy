@@ -67,7 +67,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	userId := uint64(111)
 	conn.SetUserId(userId)
 	fmt.Println("login===========")
-	if connOriginal, _ := conn.GetConnMgr().GetConnByUserId(userId); connOriginal != nil {
+	if connOriginal, _ := conn.GetConnMgr().GetByUserId(userId); connOriginal != nil {
 		fmt.Println("login2222222===========")
 		//踢掉原connection,并推送消息给客户端
 		downMsg := pack.NewMessageDown(global.CMD_DOWN_KICK_OUT, 0, []byte("kick out"))
