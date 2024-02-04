@@ -112,8 +112,8 @@ func (connMgr *ConnManager) ClearConn() {
 	zlog.Info("[Conn Manager ClearConn] Clear All Connections successfully: conn num = ", connMgr.Len())
 }
 
-// PlayerLen 获取当前连接
-func (connMgr *ConnManager) GetOnLinePlayer() int {
+// GetOnLine 获取当前连接
+func (connMgr *ConnManager) GetOnLine() int {
 	connMgr.connLock.Lock()
 	//在线人数
 	length := len(connMgr.players)

@@ -49,7 +49,7 @@ func TestController(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	w.Header().Set("user_id", "111")
-	playerNum := global.GetTCPServer().GetConnMgr().GetOnLinePlayer()
+	playerNum := global.GetTCPServer().GetConnMgr().GetOnLine()
 	connNum := global.GetTCPServer().GetConnMgr().Len()
 	goroutineNum := runtime.NumGoroutine()
 	data := fmt.Sprintf(`在线玩家数量: %v-%v, goroutine: %v-26-%v-%v`, playerNum, connNum, goroutineNum, playerNum*3, goroutineNum-26-playerNum*3)
