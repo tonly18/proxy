@@ -2,7 +2,6 @@ package znet
 
 import (
 	"errors"
-	"fmt"
 	"proxy/core/zinx/zconf"
 	"proxy/core/zinx/ziface"
 	"proxy/core/zinx/zlog"
@@ -111,25 +110,6 @@ func (connMgr *ConnManager) GetConnByUserId(userId uint64) (ziface.IConnection, 
 	}
 
 	return nil, errors.New("connection not found")
-}
-
-// AddConnByUserId 添加到players
-func (connMgr *ConnManager) AddConnByUserId(conn ziface.IConnection) error {
-	connMgr.connLock.Lock()
-	defer connMgr.connLock.Unlock()
-
-	//未登录
-	if conn.GetUserId() < 1 {
-		return fmt.Errorf(`conn manager player not login, donot add to players. user id:%v`, conn.GetUserId())
-	}
-	//已经添加到players
-	if _, ok := connMgr.players[conn.GetUserId()]; ok {
-		return fmt.Errorf(`conn manager player already exists. user id:%v`, conn.GetUserId())
-	}
-	//已经登录时,则添加到players
-	connMgr.players[conn.GetUserId()] = conn.GetConnID()
-
-	return nil
 }
 
 // PlayerLen 获取当前连接

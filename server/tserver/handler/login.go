@@ -48,8 +48,8 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	//if resp.GetHeaderCode() != 200 {
 	//	return fmt.Errorf(`login call http server is code:%v`, resp.Response.StatusCode)
 	//}
-	//
-	////处理返回数据
+
+	//处理返回数据
 	//userId := cast.ToUint64(resp.GetDataFromHeader("user_id"))     //玩家ID
 	//serverId := cast.ToUint32(resp.GetDataFromHeader("server_id")) //区服ID
 	//if uin == 0 || userId == 0 || serverId == 0 {
@@ -86,10 +86,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	}
 
 	//把conn添加到connManager
-	if err := conn.GetConnMgr().AddConnByUserId(conn); err != nil {
-		logger.Errorf(request, `[login handler] GetConnMgr.AddConnByUserId. error: %v`, err)
-		return err
-	}
+	conn.GetConnMgr().Add(conn)
 
 	//结束时间(毫秒)
 	end := time.Since(start).Milliseconds()
