@@ -83,14 +83,14 @@ func (connMgr *ConnManager) ClearConn() {
 	for uid, cid := range connMgr.players {
 		delete(connMgr.players, uid)
 		if conn, ok := connMgr.connections[cid]; ok {
-			conn.Stop()                      //停止
 			delete(connMgr.connections, cid) //删除
+			conn.Stop()                      //停止
 		}
 	}
 	//停止并删除全部的连接信息
 	for cid, conn := range connMgr.connections {
-		conn.Stop()                      //停止
 		delete(connMgr.connections, cid) //删除
+		conn.Stop()                      //停止
 	}
 
 	connMgr.connLock.Unlock()
@@ -128,8 +128,8 @@ func (connMgr *ConnManager) GetOnLinePlayer() int {
 		for connId, conn := range connMgr.connections {
 			if conn.GetUserId() > 0 {
 				if _, ok := connMgr.players[connId]; !ok {
-					conn.Stop()
 					delete(connMgr.players, conn.GetUserId())
+					conn.Stop()
 				}
 			}
 		}
