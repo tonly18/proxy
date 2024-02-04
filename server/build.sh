@@ -11,6 +11,7 @@ set -e
 ##PATH
 GIT_WORKPATH="E:/git/github.com/proxy/server"
 APP_WORKPATH="E:/itemtest/github.com/proxy/server"
+RUNTIME_LOG="${APP_WORKPATH}/log/runtime.log"
 
 ##parameter
 APP_NAME=$2
@@ -76,9 +77,9 @@ case "$1" in
 
         ##start
         SERVICE_CMD="${APP_WORKPATH}/${APP_NAME}"
-        $SERVICE_CMD >> ${APP_WORKPATH}/log/runtime.log 2>&1 &
+        ${SERVICE_CMD} >> ${RUNTIME_LOG} 2>&1 &
         if [ $? -eq 0 ];then
-            /bin/sleep 3
+            /bin/sleep 2
             echo "service start success!"
         else
             echo "service start failed!"
@@ -93,7 +94,7 @@ case "$1" in
         ##restart
         make stop
         if [ $? -eq 0 ];then
-            /bin/sleep 3
+            /bin/sleep 2
             make start
             if [ $? -ne 0 ];then
               exit 1
