@@ -115,7 +115,7 @@ func (s *Server) Start() {
 				continue
 			}
 			AcceptDelay.Reset()
-			zlog.Info("[TCP SERVER START] A New Conn Remote Addr:", conn.RemoteAddr().String())
+			zlog.Info("[TCP SERVER START] A New Connection IS Created, Remote Addr:", conn.RemoteAddr().String())
 
 			//3.3 处理该新连接请求的业务方法,此时应该有handler和conn是绑定的
 			cid := atomic.AddUint64(&s.connId, 1)
