@@ -10,7 +10,6 @@ import (
 	"proxy/library/logger"
 	"proxy/server/global"
 	"runtime"
-	"strings"
 )
 
 func WrapHandle(handler func(*server.Request) *server.Response) func(http.ResponseWriter, *http.Request) {
@@ -31,30 +30,17 @@ func WrapHandle(handler func(*server.Request) *server.Response) func(http.Respon
 		}()
 
 		//params
-		proxyId := r.Header.Get("proxy_id")
-		serverId := r.Header.Get("server_id")
-		//uin := r.Header.Get("uin")
-		userId := r.Header.Get("user_id") //当前玩家ID
-		clientIP := r.Header.Get("client_ip")
-		playerId := r.Header.Get("player_id") //需要推送消息的玩家ID(包含当前玩家ID)
-		traceId := r.Header.Get("trace_id")
-		gameServerId := r.Header.Get("gameserver_id") //GameServer ID
+		proxyId := r.Header.Get("proxy_id")           //proxy id
+		serverId := r.Header.Get("server_id")         //server id
+		userId := r.Header.Get("user_id")             //当前玩家ID
+		clientIP := r.Header.Get("client_ip")         //IP
+		traceId := r.Header.Get("trace_id")           //链路追踪ID
+		gameServerId := r.Header.Get("gameserver_id") //gameServer ID
+		playerId := r.Header.Get("player_id")         //需要推送消息的玩家ID(包含当前玩家ID),如: 1,2,3
 
 		//参数判断
 		if proxyId == "" || serverId == "" || userId == "" || clientIP == "" || playerId == "" || traceId == "" {
 			writeResponseData(w, &server.Response{Code: 1000})
-			return
-		}
-
-		//待推送消息的玩家ID
-		playerIds := make([]int, 0, len(playerId)/2)
-		for _, v := range strings.Split(playerId, ",") {
-			if v != "" {
-				playerIds = append(playerIds, cast.ToInt(v))
-			}
-		}
-		if len(playerIds) == 0 {
-			writeResponseData(w, &server.Response{Code: 1001})
 			return
 		}
 
@@ -72,19 +58,23 @@ func WrapHandle(handler func(*server.Request) *server.Response) func(http.Respon
 		request := &server.Request{
 			ResponseWriter: w,
 			Request:        r,
-			PlayerID:       playerIds,
 			UserID:         uid,
 			Conn:           conn,
 		}
-		request.SetTraceID(traceId)
+		request.SetData("proxy_id", proxyId)
+		request.SetData("server_id", serverId)
+		request.SetData("user_id", userId)
+		request.SetData("client_ip", clientIP)
+		request.SetData("trace_id", traceId)
 		request.SetData("gameserver_id", gameServerId)
+		request.SetData("player_id", playerId)
 
 		//handler
 		resp := handler(request)
 		if resp.Type == 1 {
-			logger.Info(request, fmt.Sprintf(`[proxy id:%v, server id:%v, ip:%v, player id:%v, user id:%v, code:%v, data:%v, message:%v]`, proxyId, serverId, clientIP, playerId, userId, resp.Code, resp.Data, resp.Msg))
+			logger.Info(request, fmt.Sprintf(`[code:%v, data:%v, message:%v]`, resp.Code, resp.Data, resp.Msg))
 		} else if resp.Type == 2 {
-			logger.Error(request, fmt.Sprintf(`[proxy id:%v, server id:%v, ip:%v, player id:%v, user id:%v, code:%v, data:%v, message:%v]`, proxyId, serverId, clientIP, playerId, userId, resp.Code, resp.Data, resp.Msg))
+			logger.Error(request, fmt.Sprintf(`[code:%v, data:%v, message:%v]`, resp.Code, resp.Data, resp.Msg))
 		}
 
 		//result

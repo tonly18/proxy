@@ -10,7 +10,6 @@ import (
 	"proxy/core/zinx/zconf"
 	"proxy/core/zinx/ziface"
 	"proxy/core/zinx/zlog"
-	"proxy/library/command"
 	"proxy/library/pool"
 	"runtime"
 	"strings"
@@ -182,7 +181,6 @@ func (c *Connection) StartReader() {
 
 			//Request 得到当前客户端请求的Request数据
 			req := NewRequest(c, msg)
-			req.SetTraceId(command.GenTraceID()) //设置链路追踪ID
 
 			//执行request
 			if zconf.GlobalObject.WorkerPoolSize > 0 {

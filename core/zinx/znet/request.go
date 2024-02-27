@@ -17,7 +17,7 @@ const (
 	HANDLE_OVER
 )
 
-//Request 请求
+// Request 请求
 type Request struct {
 	conn     ziface.IConnection //已经和客户端建立好的 链接
 	msg      ziface.IMessage    //客户端请求的数据
@@ -34,26 +34,27 @@ func NewRequest(conn ziface.IConnection, msg ziface.IMessage) ziface.IRequest {
 		msg:      msg,
 		steps:    PRE_HANDLE,
 		stepLock: new(sync.RWMutex),
+		traceId:  command.GenTraceID(), //初始化链路追踪ID
 		args:     make(map[string]any, 10),
 	}
 }
 
-//GetConnection 获取请求连接信息
+// GetConnection 获取请求连接信息
 func (r *Request) GetConnection() ziface.IConnection {
 	return r.conn
 }
 
-//GetData 获取请求消息的数据
+// GetData 获取请求消息的数据
 func (r *Request) GetData() []byte {
 	return r.msg.GetData()
 }
 
-//GetMsgID 获取请求的消息的ID
+// GetMsgID 获取请求的消息的ID
 func (r *Request) GetMsgID() uint32 {
 	return r.msg.GetCmd()
 }
 
-//BindRouter 绑定路由
+// BindRouter 绑定路由
 func (r *Request) BindRouter(router ziface.IRouter) {
 	r.router = router
 }
@@ -96,7 +97,7 @@ func (r *Request) Call() error {
 //	r.stepLock.Unlock()
 //}
 
-//SetAargs 数据
+// SetAargs 数据
 func (r *Request) SetAargs(key string, value any) {
 	r.args[key] = value
 }
@@ -104,35 +105,32 @@ func (r *Request) GetAargs(key string) any {
 	return r.args[key]
 }
 
-//SetTraceId 链路追踪ID
-func (r *Request) SetTraceId(traceId string) {
-	r.traceId = traceId
-}
+// GetTraceId 链路追踪ID
 func (r *Request) GetTraceId() string {
 	return r.traceId
 }
 
-//GetCtx
+// GetCtx
 func (r *Request) GetCtx() context.Context {
 	return r.conn.Context()
 }
 
-//Deadline
+// Deadline
 func (r *Request) Deadline() (deadline time.Time, ok bool) {
 	return r.conn.Context().Deadline()
 }
 
-//Done
+// Done
 func (r *Request) Done() <-chan struct{} {
 	return r.conn.Context().Done()
 }
 
-//Err
+// Err
 func (r *Request) Err() error {
 	return r.conn.Context().Err()
 }
 
-//Value
+// Value
 func (r *Request) Value(key any) any {
 	if k, ok := key.(string); ok {
 		if k == "trace_id" {
