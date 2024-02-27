@@ -59,7 +59,7 @@ type Connection struct {
 	//心跳检测器
 	hc ziface.IHeartbeatChecker
 	//是否被踢: 0不是|1是
-	kickOut atomic.Int32
+	kick atomic.Int32
 }
 
 // NewConnection 创建连接的方法
@@ -82,7 +82,7 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64) zifa
 
 	//property
 	c.closed.Store(false)
-	c.kickOut.Store(0)
+	c.kick.Store(0)
 
 	//将新创建的Conn添加到链接管理中
 	c.connManager.Add(c)
@@ -520,13 +520,13 @@ func (c *Connection) GetHeartBeat() ziface.IHeartbeatChecker {
 }
 
 // SetKickOut 设置是被被踢
-func (c *Connection) SetKickOut() bool {
-	return c.kickOut.CompareAndSwap(0, 1)
+func (c *Connection) SetKick() bool {
+	return c.kick.CompareAndSwap(0, 1)
 }
 
 // GetKickOut 获取是被被踢
-func (c *Connection) GetKickOut() int32 {
-	return c.kickOut.Load()
+func (c *Connection) GetKick() int32 {
+	return c.kick.Load()
 }
 
 // isClosed 链接是否已关闭

@@ -64,6 +64,6 @@ type IConnection interface {
 	GetHeartBeat() IHeartbeatChecker //获取心跳检测器
 
 	//是否被踢
-	SetKickOut() bool
-	GetKickOut() int32
+	SetKick() bool
+	GetKick() int32
 }
