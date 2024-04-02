@@ -1,0 +1,12 @@
+FROM centos:7
+
+WORKDIR /
+
+RUN mkdir log
+
+COPY proxy-server proxy-server
+COPY conf/config_*.toml /conf/config_*.toml
+
+EXPOSE 6000 7000
+
+ENTRYPOINT ["/proxy-server"]
