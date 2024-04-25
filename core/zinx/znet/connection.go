@@ -327,14 +327,14 @@ func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
 
 	// 发送超时
 	select {
+	case <-c.ctx.Done():
+		return errors.New("connection closed when send buff msg")
 	case <-idleTimeout.C:
 		zlog.Error("[conn SendBuffMsg] Send Buff Msg Timeout")
 		return errors.New("send buff msg timeout")
 	case c.msgBuffChan <- msg:
 		return nil
 	}
-	//写回客户端
-	//c.msgBuffChan <- msg
 
 	return nil
 }
@@ -351,6 +351,8 @@ func (c *Connection) SendByteMsg(data []byte) error {
 
 	//发送超时
 	select {
+	case <-c.ctx.Done():
+		return errors.New("connection closed when send buff msg")
 	case <-idleTimeout.C:
 		zlog.Error("[conn SendByteMsg] Send Buff Msg Timeout")
 		return errors.New("send buff msg timeout")
