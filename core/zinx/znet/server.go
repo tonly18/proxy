@@ -96,7 +96,8 @@ func (s *Server) Start() {
 		//3 启动server网络连接业务
 		for {
 			//3.1 设置服务器最大连接控制,如果超过最大连接,那么则关闭此新的连接
-			if s.connMgr.Len() >= zconf.GlobalObject.MaxConn {
+			connCount, _ := s.connMgr.Len()
+			if connCount >= zconf.GlobalObject.MaxConn {
 				zlog.Infof(`[TCP SERVER START] Exceeded the maxConnNum:%d, Wait:%d`, zconf.GlobalObject.MaxConn, AcceptDelay.duration)
 				AcceptDelay.Delay()
 				continue

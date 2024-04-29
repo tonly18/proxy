@@ -21,7 +21,7 @@ type IConnManager interface {
 	Remove(IConnection)              //删除连接
 	Get(uint64) (IConnection, error) //利用ConnID获取链接
 	GetByUserId(uint64) (IConnection, error)
-	Len() int       //获取当前连接
-	ClearConn()     //删除并停止所有链接
-	GetOnLine() int //获取当前在线玩家
+	Len() (int, int) //获取当前连接
+	ClearConn()      //删除并停止所有链接
+	GetOnLine() int  //获取当前在线玩家
 }

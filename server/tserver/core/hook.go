@@ -13,7 +13,7 @@ import (
 // OnConnStartFunc 上线
 func OnConnStartFunc(conn ziface.IConnection) {
 	//玩家在线数
-	userOnLineNumber := conn.GetConnMgr().Len()
+	userOnLineNumber, _ := conn.GetConnMgr().Len()
 
 	logger.Info(context.Background(), "OnConnStartFunc. userOnLineNumber:", userOnLineNumber)
 	return
@@ -44,7 +44,7 @@ func OnConnStartFunc(conn ziface.IConnection) {
 
 // OnConnStopFunc 下线
 func OnConnStopFunc(conn ziface.IConnection) {
-	userOnLineNumber := conn.GetConnMgr().Len() //玩家在线数
+	userOnLineNumber, _ := conn.GetConnMgr().Len() //玩家在线数
 	proxyId := conn.GetTCPServer().GetID()
 	serverId := conn.GetServerId()
 	userId := conn.GetUserId()

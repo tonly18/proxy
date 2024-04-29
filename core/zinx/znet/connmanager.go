@@ -25,16 +25,21 @@ func NewConnManager() ziface.IConnManager {
 
 // Add 添加链接
 func (connMgr *ConnManager) Add(conn ziface.IConnection) {
+	connCount, playerCount := connMgr.Len()
+
 	connMgr.connLock.Lock()
 	//将conn连接添加到ConnManager中
+	connCount++
 	connMgr.connections[conn.GetConnID()] = conn
 	//如果conn(已登录),则添加到players中
 	if conn.GetUserId() > 0 {
+		playerCount++
 		connMgr.players[conn.GetUserId()] = conn.GetConnID()
+		zlog.Infof(`[Conn Manager Add] Connection Add UserID To ConnManager Successfully! Conn Number:%v, Player Number:%v, Address:%v`, connCount, playerCount, conn.GetRemoteAddr())
 	}
 	connMgr.connLock.Unlock()
 
-	zlog.Infof(`[Conn Manager Add] Connection Add To ConnManager Successfully! Conn Number:%v, Address:%v`, connMgr.Len(), conn.GetRemoteAddr())
+	zlog.Infof(`[Conn Manager Add] Connection Add To ConnManager Successfully! Conn Number:%v, Player Number:%v, Address:%v`, connCount, playerCount, conn.GetRemoteAddr())
 }
 
 // Remove 删除连接
@@ -52,7 +57,8 @@ func (connMgr *ConnManager) Remove(conn ziface.IConnection) {
 
 	connMgr.connLock.Unlock()
 
-	zlog.Infof(`[Conn Manager Remove] Conn Remove ConnID:%v Successfully! Conn Number:%v, Address:%v`, conn.GetConnID(), connMgr.Len(), conn.GetRemoteAddr())
+	connCount, playerCount := connMgr.Len()
+	zlog.Infof(`[Conn Manager Remove] Conn Remove ConnID:%v Successfully! Conn Number:%v, Player Number:%v, Address:%v`, conn.GetConnID(), connCount, playerCount, conn.GetRemoteAddr())
 }
 
 // Get 利用ConnID获取链接
@@ -81,12 +87,20 @@ func (connMgr *ConnManager) GetByUserId(userId uint64) (ziface.IConnection, erro
 	return nil, errors.New("connection not found")
 }
 
-// Len 获取当前连接
-func (connMgr *ConnManager) Len() int {
+// Len 获取当前连接、在线玩家数量
+//
+// @params:
+//
+// @return:
+//
+//	int	connection数量
+//	int	player数量
+func (connMgr *ConnManager) Len() (int, int) {
 	connMgr.connLock.RLock()
-	length := len(connMgr.connections)
+	connCount := len(connMgr.connections)
+	playerCount := len(connMgr.players)
 	connMgr.connLock.RUnlock()
-	return length
+	return connCount, playerCount
 }
 
 // ClearConn 清除并停止所有连接
@@ -109,7 +123,8 @@ func (connMgr *ConnManager) ClearConn() {
 
 	connMgr.connLock.Unlock()
 
-	zlog.Info("[Conn Manager ClearConn] Clear All Connections successfully: conn num = ", connMgr.Len())
+	connCount, playerCount := connMgr.Len()
+	zlog.Infof("[Conn Manager ClearConn] Clear All Connections successfully! Conn Number:%v, Player Number:%v", connCount, playerCount)
 }
 
 // GetOnLine 获取当前连接
