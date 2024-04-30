@@ -38,8 +38,6 @@ type Connection struct {
 	property map[string]any
 	//保护当前property的锁
 	propertyLock sync.Mutex
-	//玩家ID
-	userId uint64
 	//当前连接的关闭状态
 	closed atomic.Bool
 	//当前链接是属于哪个Connection Manager
@@ -410,10 +408,10 @@ func (c *Connection) GetServerId() uint32 {
 
 // SetUserId 玩家ID
 func (c *Connection) SetUserId(userId uint64) {
-	c.userId = userId
+	c.SetProperty("user_id", userId)
 }
 func (c *Connection) GetUserId() uint64 {
-	return c.userId
+	return cast.ToUint64(c.GetProperty("user_id"))
 }
 
 func (c *Connection) finalizer() {
@@ -468,9 +466,6 @@ func (c *Connection) Err() error {
 // Value
 func (c *Connection) Value(key any) any {
 	if k, ok := key.(string); ok {
-		if k == "user_id" {
-			return c.GetUserId()
-		}
 		if k == "client_ip" {
 			return c.GetRemoteIP()
 		}

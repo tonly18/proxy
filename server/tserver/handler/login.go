@@ -58,14 +58,13 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	//}
 
 	//设置conn属性
+	serverId, userId := uint32(0), uint64(111)
 	conn := request.GetConnection()
-	//conn.SetProxyId(conn.GetTCPServer().GetID()) //网关ID
-	//conn.SetServerId(serverId)                   //区服ID
-	//conn.SetUserId(userId)                       //玩家ID
+	conn.SetProxyId(conn.GetTCPServer().GetID()) //网关ID
+	conn.SetServerId(serverId)                   //区服ID
+	conn.SetUserId(userId)                       //玩家ID
 
 	//判断玩家是否重复登录
-	userId := uint64(111)
-	conn.SetUserId(userId)
 	fmt.Println("login===========")
 	if connOriginal, _ := conn.GetConnMgr().GetByUserId(userId); connOriginal != nil {
 		fmt.Println("login2222222===========")
