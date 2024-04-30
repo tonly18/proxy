@@ -132,7 +132,7 @@ func (c *Connection) StartReader() {
 	defer func() {
 		zlog.Info("[Conn Read] Goroutine is Exit!", c.GetRemoteAddr().String())
 		if err := recover(); err != nil {
-			zlog.Error("[Conn Read] Goroutine is Exit Error!", c.GetRemoteAddr().String())
+			zlog.Error("[Conn Read] Goroutine is Exit Error!", c.GetRemoteAddr().String(), err)
 		}
 		c.Stop()
 	}()
