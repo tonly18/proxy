@@ -29,12 +29,14 @@ func (connMgr *ConnManager) Add(conn ziface.IConnection) {
 
 	connMgr.connLock.Lock()
 	//将conn连接添加到ConnManager中
-	connCount++
-	connMgr.connections[conn.GetConnID()] = conn
+	if _, ok := connMgr.connections[conn.GetConnID()]; !ok {
+		connMgr.connections[conn.GetConnID()] = conn
+		connCount = len(connMgr.connections)
+	}
 	//如果conn(已登录),则添加到players中
 	if conn.GetUserId() > 0 {
-		playerCount++
 		connMgr.players[conn.GetUserId()] = conn.GetConnID()
+		playerCount = len(connMgr.players)
 		zlog.Infof(`[Conn Manager Add] Connection Add UserID To ConnManager Successfully! Conn Number:%v, Player Number:%v, Address:%v`, connCount, playerCount, conn.GetRemoteAddr())
 	}
 	connMgr.connLock.Unlock()
