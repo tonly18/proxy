@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/spf13/cast"
@@ -10,9 +9,7 @@ import (
 	"proxy/library/logger"
 	"proxy/server/config"
 	"proxy/server/library"
-	"proxy/server/utils"
 	"strings"
-	"time"
 )
 
 // PublicRouter Struct
@@ -21,9 +18,6 @@ type PublicRouter struct {
 }
 
 func (t *PublicRouter) Handle(request ziface.IRequest) error {
-	//开始时间
-	start := time.Now()
-
 	//判断玩家是否登录
 	userId := request.GetConnection().GetUserId() //当前玩家ID
 	if userId == 0 {
@@ -59,18 +53,12 @@ func (t *PublicRouter) Handle(request ziface.IRequest) error {
 	if err != nil {
 		return fmt.Errorf(`[Public Handle] resp.GetData error: %w`, err)
 	}
-	request.SetAargs("gameserver_id", resp.GetDataFromHeader("gameserver_id")) //game server id
 	if downRawData != nil && len(downRawData) < 16 {
 		return fmt.Errorf(`[Public Handle] resp.GetData rawDownData is empty. downRawData: %v`, downRawData)
 	}
 
-	//json
-	if downRawData != nil {
-		resultJson := utils.ResultJSON{}
-		if err := json.Unmarshal(downRawData, &resultJson); err == nil {
-			return fmt.Errorf(`[Public Handle] resp.GetData rawDownData: %v`, resultJson)
-		}
-	}
+	//设置request参数
+	request.SetAargs("gameserver_id", resp.GetDataFromHeader("gameserver_id"))
 
 	//给客户端(玩家)推送消息
 	playerId := resp.GetDataFromHeader("player_id") //玩家ID
@@ -91,10 +79,6 @@ func (t *PublicRouter) Handle(request ziface.IRequest) error {
 			continue
 		}
 	}
-
-	//结束时间(毫秒)
-	end := time.Since(start).Milliseconds()
-	logger.Infof(request, `[Status Code:%d | MsgID:%d | Length:%d | Execution Time:%d(ms)]`, resp.GetHeaderCode(), request.GetMsgID(), len(downRawData), end)
 
 	//return
 	return nil
