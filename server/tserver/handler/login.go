@@ -58,7 +58,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	//}
 
 	//设置conn属性
-	serverId, userId := uint32(0), uint64(111)
+	serverId, userId := uint32(1), uint64(1111)
 	conn := request.GetConnection()
 	conn.SetProxyId(conn.GetTCPServer().GetID()) //网关ID
 	conn.SetServerId(serverId)                   //区服ID
@@ -76,11 +76,10 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 		} else {
 			if err := connOriginal.SendByteMsg(downData); err != nil {
 				logger.Errorf(request, `[login handler] connection.SendByteMsg. error: %v`, err)
-				return err
 			}
 		}
-		connOriginal.GetConnMgr().Remove(connOriginal)
 		_ = connOriginal.SetKick() //标识是被踢下线
+		connOriginal.GetConnMgr().Remove(connOriginal)
 		connOriginal.Stop()
 	}
 

@@ -15,8 +15,8 @@ func main() {
 		panic(fmt.Sprintf("net dial error: %v", err))
 	}
 
+	loginServer(conn)
 	testServer(conn)
-	//loginServer(conn)
 
 	time.Sleep(3 * time.Second)
 }
@@ -104,6 +104,6 @@ func loginServer(conn net.Conn) {
 	fmt.Println("conn.write-err(testServer)::::::::", n, err)
 	fmt.Println("--------------------------------------- \n")
 
-	time.Sleep(5 * time.Second)
-	conn.Close()
+	//time.Sleep(1 * time.Second)
+	//conn.Close()
 }

@@ -1,23 +1,36 @@
 package global
 
 import (
+	"github.com/joho/godotenv"
 	"os"
 	"proxy/core/zinx/ziface"
-	"strings"
 )
 
-// 运行环境: local、dev、test、prod
-var PROXY_SERVER_ENV string
-
-// 当前工作目录
-var PROXY_SERVER_WORK_PATH_ENV string
+var (
+	// 运行环境: local、dev、test、prod
+	PROXY_SERVER_ENV string
+	// 当前工作目录
+	PROXY_SERVER_PATH string
+	// 日志目录
+	PROXY_SERVER_LOG_PATH string
+	// 配置文件目录
+	PROXY_SERVER_CONFIG_PATH string
+)
 
 func init() {
-	PROXY_SERVER_ENV = strings.ToLower(os.Getenv("ZINX_ENV"))
-	PROXY_SERVER_WORK_PATH_ENV, _ = os.Getwd()
+	if _, err := os.Stat(".env"); err == nil {
+		if err = godotenv.Load(".env"); err != nil {
+			panic(err)
+		}
+	}
+
+	PROXY_SERVER_ENV = os.Getenv("ZINX_ENV")
+	PROXY_SERVER_PATH = os.Getenv("PROXY_SERVER_PATH")
+	PROXY_SERVER_LOG_PATH = os.Getenv("PROXY_SERVER_LOG_PATH")
+	PROXY_SERVER_CONFIG_PATH = os.Getenv("PROXY_SERVER_CONFIG_PATH")
 }
 
-// TCP Server
+// 全局 TCP Server
 var globalTcpServer ziface.IServer
 
 // SetTCPServer 获取tcpServer

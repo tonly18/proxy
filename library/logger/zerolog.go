@@ -23,6 +23,7 @@ func init() {
 	runtime.SetFinalizer(fs, func(f *os.File) {
 		f.Close()
 	})
+	runtime.KeepAlive(fs)
 
 	zerolog.TimeFieldFormat = time.DateTime
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)

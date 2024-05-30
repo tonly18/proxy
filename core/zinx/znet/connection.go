@@ -415,6 +415,11 @@ func (c *Connection) GetUserId() uint64 {
 }
 
 func (c *Connection) finalizer() {
+	//将链接从连接管理器中删除
+	if c.connManager != nil {
+		c.connManager.Remove(c)
+	}
+
 	//如果当前链接已经关闭
 	if c.isClosed() == true {
 		return
@@ -431,10 +436,6 @@ func (c *Connection) finalizer() {
 
 	//关闭socket链接
 	_ = c.conn.Close()
-	//将链接从连接管理器中删除
-	if c.connManager != nil {
-		c.connManager.Remove(c)
-	}
 
 	//关闭该链接全部管道
 	if c.msgBuffChan != nil {
