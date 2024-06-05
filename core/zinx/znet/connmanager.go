@@ -145,7 +145,7 @@ func (connMgr *ConnManager) GetOnLine() int {
 		for connId, conn := range connMgr.connections {
 			if conn.GetUserId() > 0 {
 				if _, ok := connMgr.players[connId]; !ok {
-					delete(connMgr.players, conn.GetUserId())
+					delete(connMgr.connections, connId)
 					conn.Stop()
 				}
 			}

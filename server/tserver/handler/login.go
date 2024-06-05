@@ -78,8 +78,8 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 				logger.Errorf(request, `[login handler] connection.SendByteMsg. error: %v`, err)
 			}
 		}
-		_ = connOriginal.SetKick() //标识是被踢下线
 		connOriginal.GetConnMgr().Remove(connOriginal)
+		_ = connOriginal.SetKick() //标识是被踢下线
 		connOriginal.Stop()
 	}
 
