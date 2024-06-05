@@ -8,6 +8,7 @@ import (
 	"proxy/library/logger"
 	"proxy/server/config"
 	"proxy/server/library"
+	"proxy/utils"
 )
 
 // OnConnStartFunc 上线
@@ -19,6 +20,9 @@ func OnConnStartFunc(conn ziface.IConnection) {
 	return
 
 	//call http server
+	serverId := conn.GetProperty(utils.ServerID)
+	userId := conn.GetProperty(utils.UserID)
+
 	url := fmt.Sprintf(`%v%v`, library.NewPoll().Get(), config.HttpConfig.GameServerOnOffLineAPI)
 	httpClient := httpclient.NewClient(&httpclient.Config{})
 	resp, err := httpClient.Get(url, map[string]any{
@@ -26,8 +30,8 @@ func OnConnStartFunc(conn ziface.IConnection) {
 		"status": 1,
 	}).SetHeader(map[string]any{
 		"proxy_id":  conn.GetTCPServer().GetID(),
-		"server_id": conn.GetServerId(),
-		"user_id":   conn.GetUserId(),
+		"server_id": serverId,
+		"user_id":   userId,
 		"client_ip": conn.GetRemoteIP(),
 		"socket_id": conn.GetConnID(),
 	}).Do()
@@ -39,17 +43,18 @@ func OnConnStartFunc(conn ziface.IConnection) {
 		logger.Error(conn, "[OnConnStartFunc] player on line fail, code: ", resp.GetHeaderCode(), ", api: ", url)
 	}
 
-	logger.Info(conn, "[OnConnStartFunc] player on line success, conn id: ", conn.GetConnID(), ", userId:", conn.GetUserId())
+	logger.Info(conn, "[OnConnStartFunc] player on line success, conn id: ", conn.GetConnID(), ", userId:", userId)
 }
 
 // OnConnStopFunc 下线
 func OnConnStopFunc(conn ziface.IConnection) {
 	userOnLineNumber, _ := conn.GetConnMgr().Len() //玩家在线数
 	proxyId := conn.GetTCPServer().GetID()
-	serverId := conn.GetServerId()
-	userId := conn.GetUserId()
+	serverId := conn.GetProperty(utils.ServerID)
+	userId := conn.GetProperty(utils.UserID)
 	clientId := conn.GetRemoteIP()
 	socketId := conn.GetConnID()
+	kick := conn.GetProperty(utils.Kick)
 
 	logger.Info(context.Background(), "OnConnStopFunc. userOnLineNumber:", userOnLineNumber)
 	return
@@ -60,6 +65,7 @@ func OnConnStopFunc(conn ziface.IConnection) {
 	resp, err := httpClient.Get(url, map[string]any{
 		"online": userOnLineNumber,
 		"status": 0,
+		"kick":   kick,
 	}).SetHeader(map[string]any{
 		"proxy_id":  proxyId,
 		"server_id": serverId,

@@ -2,9 +2,11 @@ package znet
 
 import (
 	"errors"
+	"github.com/spf13/cast"
 	"proxy/core/zinx/zconf"
 	"proxy/core/zinx/ziface"
 	"proxy/core/zinx/zlog"
+	"proxy/utils"
 	"sync"
 )
 
@@ -34,8 +36,9 @@ func (connMgr *ConnManager) Add(conn ziface.IConnection) {
 		connCount = len(connMgr.connections)
 	}
 	//如果conn(已登录),则添加到players中
-	if conn.GetUserId() > 0 {
-		connMgr.players[conn.GetUserId()] = conn.GetConnID()
+	userId := cast.ToUint64(conn.GetProperty(utils.UserID))
+	if userId > 0 {
+		connMgr.players[userId] = conn.GetConnID()
 		playerCount = len(connMgr.players)
 		zlog.Infof(`[Conn Manager Add] Connection Add UserID To ConnManager Successfully! Conn Number:%v, Player Number:%v, Address:%v`, connCount, playerCount, conn.GetRemoteAddr())
 	}
@@ -49,9 +52,10 @@ func (connMgr *ConnManager) Remove(conn ziface.IConnection) {
 	connMgr.connLock.Lock()
 
 	//删除players
-	if cid, ok := connMgr.players[conn.GetUserId()]; ok {
+	userId := cast.ToUint64(conn.GetProperty(utils.UserID))
+	if cid, ok := connMgr.players[userId]; ok {
 		if conn.GetConnID() == cid {
-			delete(connMgr.players, conn.GetUserId())
+			delete(connMgr.players, userId)
 		}
 	}
 	//删除连接信息
@@ -143,7 +147,7 @@ func (connMgr *ConnManager) GetOnLine() int {
 			}
 		}
 		for connId, conn := range connMgr.connections {
-			if conn.GetUserId() > 0 {
+			if cast.ToUint64(conn.GetProperty(utils.UserID)) > 0 {
 				if _, ok := connMgr.players[connId]; !ok {
 					delete(connMgr.connections, connId)
 					conn.Stop()

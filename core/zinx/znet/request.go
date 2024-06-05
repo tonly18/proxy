@@ -3,9 +3,9 @@ package znet
 import (
 	"context"
 	"errors"
-	"github.com/spf13/cast"
 	"proxy/core/zinx/ziface"
 	"proxy/library/command"
+	"proxy/utils"
 	"sync"
 	"time"
 )
@@ -132,22 +132,19 @@ func (r *Request) Err() error {
 
 // Value
 func (r *Request) Value(key any) any {
-	if k, ok := key.(string); ok {
-		if k == "trace_id" {
-			return r.GetTraceId()
-		}
-		if k == "user_id" {
-			return r.conn.GetUserId()
-		}
-		if k == "client_ip" {
+	if keywords, ok := key.(string); ok {
+		if keywords == utils.ClientIP {
 			return r.conn.GetRemoteIP()
 		}
+		if keywords == utils.TraceID {
+			return r.GetTraceId()
+		}
+		value := r.GetAargs(keywords)
+		if command.IsValueNil(value) {
+			value = r.conn.GetProperty(keywords)
+		}
+		return value
 	}
 
-	value := r.GetAargs(cast.ToString(key))
-	if command.IsValueNil(value) {
-		value = r.conn.GetProperty(cast.ToString(key))
-	}
-
-	return value
+	return nil
 }

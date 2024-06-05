@@ -44,14 +44,6 @@ type IConnection interface {
 	GetProperty(string) any  //获取链接属性
 	RemoveProperty(string)   //移除链接属性
 
-	//conn自定义属性
-	SetProxyId(uint32) //网关
-	GetProxyId() uint32
-	SetServerId(uint32) //区服ID
-	GetServerId() uint32
-	SetUserId(uint64) //角色ID(玩家ID)
-	GetUserId() uint64
-
 	//context
 	Deadline() (deadline time.Time, ok bool)
 	Done() <-chan struct{}
@@ -62,8 +54,4 @@ type IConnection interface {
 	GetCreateTime() int32            //链接创建时间
 	SetHeartBeat(IHeartbeatChecker)  //设置心跳检测器
 	GetHeartBeat() IHeartbeatChecker //获取心跳检测器
-
-	//是否被踢
-	SetKick() bool
-	GetKick() int32
 }

@@ -9,6 +9,7 @@ import (
 	"proxy/library/logger"
 	"proxy/server/config"
 	"proxy/server/library"
+	"proxy/utils"
 	"strings"
 )
 
@@ -19,7 +20,7 @@ type PublicRouter struct {
 
 func (t *PublicRouter) Handle(request ziface.IRequest) error {
 	//判断玩家是否登录
-	userId := request.GetConnection().GetUserId() //当前玩家ID
+	userId := cast.ToUint64(request.GetConnection().GetProperty(utils.UserID)) //当前玩家ID
 	if userId == 0 {
 		return errors.New("[Public Handle] player not login")
 	}
@@ -36,7 +37,7 @@ func (t *PublicRouter) Handle(request ziface.IRequest) error {
 	resp, err := httpClient.NewRequest("POST", url, request.GetData()).SetHeader(map[string]any{
 		"Content-Type": "application/octet-stream",
 		"proxy_id":     conn.GetTCPServer().GetID(),
-		"server_id":    conn.GetProperty("server_id"),
+		"server_id":    conn.GetProperty(utils.ServerID),
 		"user_id":      userId,
 		"client_ip":    conn.GetRemoteIP(),
 		"trace_id":     request.GetTraceId(),

@@ -6,6 +6,7 @@ import (
 	"proxy/library/logger"
 	"proxy/server/global"
 	"proxy/server/utils/pack"
+	"proxy/utils"
 	"time"
 )
 
@@ -58,11 +59,12 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	//}
 
 	//设置conn属性
-	serverId, userId := uint32(1), uint64(1111)
+	serverId := uint32(1)
+	userId := uint64(1111)
 	conn := request.GetConnection()
-	conn.SetProxyId(conn.GetTCPServer().GetID()) //网关ID
-	conn.SetServerId(serverId)                   //区服ID
-	conn.SetUserId(userId)                       //玩家ID
+	conn.SetProperty(utils.ProxyID, conn.GetTCPServer().GetID()) //网关ID
+	conn.SetProperty(utils.ServerID, serverId)                   //区服ID
+	conn.SetProperty(utils.UserID, userId)                       //玩家ID
 
 	//判断玩家是否重复登录
 	fmt.Println("login===========")
@@ -79,7 +81,7 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 			}
 		}
 		connOriginal.GetConnMgr().Remove(connOriginal)
-		_ = connOriginal.SetKick() //标识是被踢下线
+		connOriginal.SetProperty(utils.Kick, 1) //被踢下线
 		connOriginal.Stop()
 	}
 

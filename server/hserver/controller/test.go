@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"proxy/core/server"
 	"proxy/server/global"
+	"proxy/utils"
 	"runtime"
 )
 
@@ -21,7 +22,7 @@ func TestController(w http.ResponseWriter, r *http.Request) {
 		} else {
 			writeResponseData(w, &server.Response{
 				Code: 2005,
-				Data: fmt.Sprintf(`connID:%d, userId:%d`, conn.GetConnID(), conn.GetUserId()),
+				Data: fmt.Sprintf(`connID:%d, userId:%d`, conn.GetConnID(), conn.GetProperty(utils.UserID)),
 			})
 		}
 		return

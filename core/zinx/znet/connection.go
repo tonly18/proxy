@@ -56,8 +56,6 @@ type Connection struct {
 	lastActivityTime time.Time
 	//心跳检测器
 	hc ziface.IHeartbeatChecker
-	//是否被踢: 0不是|1是
-	kick atomic.Int32
 }
 
 // NewConnection 创建连接的方法
@@ -80,7 +78,7 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64) zifa
 
 	//property
 	c.closed.Store(false)
-	c.kick.Store(0)
+	//c.kick.Store(0)
 
 	//将新创建的Conn添加到链接管理中
 	c.connManager.Add(c)
@@ -390,30 +388,6 @@ func (c *Connection) Context() context.Context {
 	return c.ctx
 }
 
-// SetProxyId 网关
-func (c *Connection) SetProxyId(proxyId uint32) {
-	c.SetProperty("proxy_id", proxyId)
-}
-func (c *Connection) GetProxyId() uint32 {
-	return cast.ToUint32(c.GetProperty("proxy_id"))
-}
-
-// SetServerId 区服ID
-func (c *Connection) SetServerId(serverId uint32) {
-	c.SetProperty("server_id", serverId)
-}
-func (c *Connection) GetServerId() uint32 {
-	return cast.ToUint32(c.GetProperty("server_id"))
-}
-
-// SetUserId 玩家ID
-func (c *Connection) SetUserId(userId uint64) {
-	c.SetProperty("user_id", userId)
-}
-func (c *Connection) GetUserId() uint64 {
-	return cast.ToUint64(c.GetProperty("user_id"))
-}
-
 func (c *Connection) finalizer() {
 	//将链接从连接管理器中删除
 	if c.connManager != nil {
@@ -446,7 +420,7 @@ func (c *Connection) finalizer() {
 	c.callOnConnStop()
 
 	//logger
-	zlog.Infof(`[Conn Finalizer] Conn Stop ConnID:%v, UserID:%v, Address:%v`, c.GetConnID(), c.GetUserId(), c.GetRemoteAddr())
+	zlog.Infof(`[Conn Finalizer] Conn Stop ConnID:%v, Address:%v`, c.GetConnID(), c.GetRemoteAddr())
 }
 
 // Deadline
@@ -489,7 +463,7 @@ func (c *Connection) callOnConnStart() {
 
 func (c *Connection) callOnConnStop() {
 	if c.onConnStop != nil {
-		zlog.Info(fmt.Sprintf("callOnConnStop, remote Addr:%v, conn id:%v, user id:%v", c.GetRemoteAddr(), c.GetConnID(), c.GetUserId()))
+		zlog.Info(fmt.Sprintf("callOnConnStop, remote Addr:%v, conn id:%v", c.GetRemoteAddr(), c.GetConnID()))
 		c.onConnStop(c)
 	}
 }
@@ -515,16 +489,6 @@ func (c *Connection) SetHeartBeat(checker ziface.IHeartbeatChecker) {
 // GetHeartBeat 获取心跳检测器
 func (c *Connection) GetHeartBeat() ziface.IHeartbeatChecker {
 	return c.hc
-}
-
-// SetKickOut 设置是被被踢
-func (c *Connection) SetKick() bool {
-	return c.kick.CompareAndSwap(0, 1)
-}
-
-// GetKickOut 获取是被被踢
-func (c *Connection) GetKick() int32 {
-	return c.kick.Load()
 }
 
 // isClosed 链接是否已关闭
