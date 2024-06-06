@@ -78,7 +78,6 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64) zifa
 
 	//property
 	c.closed.Store(false)
-	//c.kick.Store(0)
 
 	//将新创建的Conn添加到链接管理中
 	c.connManager.Add(c)
