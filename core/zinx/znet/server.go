@@ -33,8 +33,8 @@ type Server struct {
 	//该Server的连接断开时的Hook函数
 	onConnStop func(conn ziface.IConnection)
 
-	ctx   context.Context
-	canel context.CancelFunc
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	packet ziface.Packet
 
@@ -56,9 +56,9 @@ func NewServer() ziface.IServer {
 		connMgr:    NewConnManager(),
 		packet:     NewMessagePack(),
 		ctx:        nil,
-		canel:      nil,
+		cancel:     nil,
 	}
-	s.ctx, s.canel = context.WithCancel(context.Background())
+	s.ctx, s.cancel = context.WithCancel(context.Background())
 
 	return s
 }
@@ -144,7 +144,7 @@ func (s *Server) Stop() {
 	s.connMgr.ClearConn()
 
 	//退出
-	s.canel()
+	s.cancel()
 }
 
 // Serve 运行服务
