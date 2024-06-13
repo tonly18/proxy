@@ -2,7 +2,6 @@
 
 
 ##import config file
-. /root/.bash_profile
 . /etc/profile
 
 ##set
