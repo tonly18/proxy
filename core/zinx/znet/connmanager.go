@@ -8,6 +8,7 @@ import (
 	"proxy/core/zinx/zlog"
 	"proxy/utils"
 	"sync"
+	"time"
 )
 
 // ConnManager 连接管理模块
@@ -137,27 +138,35 @@ func (connMgr *ConnManager) ClearConn() {
 func (connMgr *ConnManager) GetOnLine() int {
 	connMgr.connLock.Lock()
 	//在线人数
-	length := len(connMgr.players)
+	playerCount := len(connMgr.players)
 
 	//修正数据不一致
-	if length != len(connMgr.connections) {
+	if playerCount != len(connMgr.connections) {
 		for uid, connId := range connMgr.players {
 			if _, ok := connMgr.connections[connId]; !ok {
 				delete(connMgr.players, uid)
 			}
 		}
 		for connId, conn := range connMgr.connections {
-			if cast.ToUint64(conn.GetProperty(utils.UserID)) > 0 {
+			//登录且不存在player中的connection
+			uid := cast.ToUint64(conn.GetProperty(utils.UserID))
+			if uid > 0 {
 				if _, ok := connMgr.players[connId]; !ok {
 					delete(connMgr.connections, connId)
 					conn.Stop()
 				}
 			}
+			//超过两天的connection
+			if int32(time.Now().Unix())-conn.GetCreateTime() > 172800 {
+				delete(connMgr.players, uid)
+				delete(connMgr.connections, connId)
+				conn.Stop()
+			}
 		}
-		length = len(connMgr.players)
+		playerCount = len(connMgr.players)
 	}
 
 	connMgr.connLock.Unlock()
 
-	return length
+	return playerCount
 }
