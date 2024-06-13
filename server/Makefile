@@ -1,9 +1,12 @@
-SERVICE_NAME:="proxy-server"
+SERVICE_NAME:=proxy-server
+BRANCH:=master
 
 .PHONY: build start restart stop clean
 
+default: build
+
 build:
-	bash build.sh compile ${SERVICE_NAME}
+	bash build.sh compile ${SERVICE_NAME} ${BRANCH}
 
 
 start:

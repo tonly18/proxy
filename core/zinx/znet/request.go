@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	PRE_HANDLE ziface.HandleStep = iota
-	HANDLE
-	POST_HANDLE
+	PRE_HANDLE  ziface.HandleStep = iota // PreHandle for pre-processing
+	HANDLE                               // Handle for processing
+	POST_HANDLE                          // PostHandle for post-processing
+
 	HANDLE_OVER
 )
 
@@ -81,8 +82,10 @@ func (r *Request) Call() error {
 			err = r.router.PostHandle(r)
 		}
 		if err != nil {
+			r.steps = PRE_HANDLE
 			return err
 		}
+
 		r.next()
 	}
 	r.steps = PRE_HANDLE
