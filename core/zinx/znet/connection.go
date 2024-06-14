@@ -51,7 +51,7 @@ type Connection struct {
 	//当前链接的本地地址
 	localAddr net.Addr
 	//conn创建时间
-	createTime int32
+	createTime time.Time
 	//最后一次活动时间
 	lastActivityTime time.Time
 	//心跳检测器
@@ -73,7 +73,7 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64) zifa
 		onConnStop:  server.GetOnConnStop(),
 		remoteAddr:  conn.RemoteAddr(),
 		localAddr:   conn.LocalAddr(),
-		createTime:  int32(time.Now().Unix()),
+		createTime:  time.Now(),
 	}
 
 	//property
@@ -449,7 +449,7 @@ func (c *Connection) Value(key any) any {
 }
 
 // GetCreateTime 链接创建时间
-func (c *Connection) GetCreateTime() int32 {
+func (c *Connection) GetCreateTime() time.Time {
 	return c.createTime
 }
 

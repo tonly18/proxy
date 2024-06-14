@@ -157,7 +157,7 @@ func (connMgr *ConnManager) GetOnLine() int {
 				}
 			}
 			//超过两天的connection
-			if int32(time.Now().Unix())-conn.GetCreateTime() > 172800 {
+			if time.Now().Unix()-conn.GetCreateTime().Unix() > 172800 {
 				delete(connMgr.players, uid)
 				delete(connMgr.connections, connId)
 				conn.Stop()
