@@ -42,7 +42,9 @@ type IConnection interface {
 	Err() error
 	Value(any) any
 
-	GetCreateTime() time.Time //conn创建时间
+	GetCreateTime() time.Time //获取conn创建时间
+	GetActivity() time.Time   //获取conn最后活跃时间
+	UpdateActivity()          //更新conn最后活跃时间
 
 	IsAlive() bool                   //判断当前连接是否存活
 	SetHeartBeat(IHeartbeatChecker)  //设置心跳检测器

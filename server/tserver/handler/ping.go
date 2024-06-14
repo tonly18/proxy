@@ -32,6 +32,9 @@ func (h *PingRouter) Handle(request ziface.IRequest) error {
 		return fmt.Errorf(`[ping handler] conn send error:%v`, err)
 	}
 
+	//更新conn最后活跃时间
+	request.GetConnection().UpdateActivity()
+
 	//结束时间(毫秒)
 	end := time.Since(start).Milliseconds()
 	logger.Infof(request, `[Status Code:%d | MsgID:%d | Execution Time:%d(ms)]`, 200, request.GetMsgID(), end)

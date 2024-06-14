@@ -171,7 +171,7 @@ func (c *Connection) StartReader() {
 
 			//正常读取到对端数据,更新心跳检测Active状态
 			if c.hc != nil {
-				c.updateActivity()
+				c.UpdateActivity()
 			}
 
 			//Request 得到当前客户端请求的Request数据
@@ -211,7 +211,7 @@ func (c *Connection) Start() {
 
 	//开启心跳检测器
 	if c.hc != nil {
-		c.updateActivity()
+		c.UpdateActivity()
 		c.hc.Start()
 	}
 
@@ -476,7 +476,13 @@ func (c *Connection) IsAlive() bool {
 	return time.Now().Sub(c.lastActivityTime) < zconf.GlobalObject.HeartbeatMaxDuration()
 }
 
-func (c *Connection) updateActivity() {
+// GetActivity 获取conn最后活跃时间
+func (c *Connection) GetActivity() time.Time {
+	return c.lastActivityTime
+}
+
+// UpdateActivity 更新conn最后活跃时间
+func (c *Connection) UpdateActivity() {
 	c.lastActivityTime = time.Now()
 }
 
