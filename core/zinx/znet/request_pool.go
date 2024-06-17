@@ -27,6 +27,9 @@ func GetRequest(conn ziface.IConnection, msg ziface.IMessage) ziface.IRequest {
 		req.steps = PRE_HANDLE
 	}
 	req.traceId = command.GenTraceID()
+	if len(req.args) > 0 {
+		clear(req.args)
+	}
 
 	return req
 }
