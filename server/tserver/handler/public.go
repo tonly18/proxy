@@ -75,8 +75,8 @@ func (t *PublicRouter) Handle(request ziface.IRequest) error {
 			logger.Errorf(request, `[Public Handle] player not exist. userId:%v, length:%d, error:%v`, v, len(downRawData), err)
 			continue
 		}
-		if err := connection.SendByteMsg(downRawData); err != nil {
-			logger.Errorf(request, `[Public Handle] connection.SendByteMsg. userId:%v, length:%d, error:%v`, v, len(downRawData), err)
+		if err := connection.SendBuffMsg(downRawData); err != nil {
+			logger.Errorf(request, `[Public Handle] connection.SendBuffMsg. userId:%v, length:%d, error:%v`, v, len(downRawData), err)
 			continue
 		}
 	}

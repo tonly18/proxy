@@ -28,9 +28,10 @@ type IConnection interface {
 	GetRemoteIP() string            //获取远程地址:ip
 	GetRemotePort() string          //获取远程地址:port
 
+	Send([]byte) error
 	SendMsg(uint32, []byte) error     //直接将Message数据发送数据给远程的TCP客户端(无缓冲)
-	SendBuffMsg(uint32, []byte) error //直接将Message数据发送给远程的TCP客户端(有缓冲)
-	SendByteMsg([]byte) error         //直接将二进制流发送给远程的TCP客户端(有缓冲)
+	SendByteMsg(uint32, []byte) error //直接将Message数据发送给远程的TCP客户端(有缓冲)
+	SendBuffMsg([]byte) error         //直接将二进制流发送给远程的TCP客户端(有缓冲)
 
 	SetProperty(string, any) //设置链接属性
 	GetProperty(string) any  //获取链接属性

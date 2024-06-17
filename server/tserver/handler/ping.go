@@ -28,7 +28,7 @@ func (h *PingRouter) Handle(request ziface.IRequest) error {
 	if err != nil {
 		return fmt.Errorf(`[ping handler] unpack error:%v`, err)
 	}
-	if err := request.GetConnection().SendByteMsg(data); err != nil {
+	if err := request.GetConnection().SendBuffMsg(data); err != nil {
 		return fmt.Errorf(`[ping handler] conn send error:%v`, err)
 	}
 

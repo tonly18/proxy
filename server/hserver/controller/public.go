@@ -51,8 +51,8 @@ func PublicController(req *server.Request) *server.Response {
 			logger.Errorf(req, `[http server public] player is not exist. user id:%v, error:%v`, uid, err)
 			continue
 		}
-		if err := conn.SendByteMsg(data); err != nil {
-			logger.Errorf(req, `[http server public] player.SendByteMsg. user id:%v, error:%v`, uid, err)
+		if err := conn.SendBuffMsg(data); err != nil {
+			logger.Errorf(req, `[http server public] player.SendBuffMsg. user id:%v, error:%v`, uid, err)
 			continue
 		}
 	}

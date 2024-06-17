@@ -76,8 +76,8 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 		if downData, err := dp.Pack(downMsg); err != nil {
 			logger.Errorf(request, `[login handler] pb.pack. error:%v`, err)
 		} else {
-			if err := connOriginal.SendByteMsg(downData); err != nil {
-				logger.Errorf(request, `[login handler] connection.SendByteMsg. error: %v`, err)
+			if err := connOriginal.SendBuffMsg(downData); err != nil {
+				logger.Errorf(request, `[login handler] connection.SendBuffMsg. error: %v`, err)
 			}
 		}
 		connOriginal.GetConnMgr().Remove(connOriginal)

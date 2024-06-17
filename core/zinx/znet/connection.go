@@ -87,48 +87,42 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64) zifa
 
 // StartWriter 写消息Goroutine， 用户将数据发送给客户端
 func (c *Connection) StartWriter() {
-	zlog.Info("[Conn Write] Goroutine is Running!", c.GetRemoteAddr().String())
+	zlog.Info("[Conn Write] Goroutine is Running!", c.GetRemoteAddr())
 
 	defer func() {
-		zlog.Info("[Conn Write] Goroutine is Exit!", c.GetRemoteAddr().String())
+		zlog.Info("[Conn Write] Goroutine is Exit!", c.GetRemoteAddr())
 		if err := recover(); err != nil {
-			zlog.Error("[Conn Write] Goroutine is Exit Error!", c.GetRemoteAddr().String())
+			zlog.Error("[Conn Write] Goroutine is Exit Error!", c.GetRemoteAddr(), err)
 		}
 		c.Stop()
 	}()
 
 	for {
 		select {
+		case <-c.ctx.Done():
+			zlog.Info("[Conn Write] context cancel!", c.GetRemoteAddr())
+			return
 		case data, ok := <-c.msgBuffChan:
 			if ok {
-				//设置写入数据流时间(100毫秒)
-				if zconf.GlobalObject.MaxConnWriteTime > 0 {
-					c.GetTCPConnection().SetWriteDeadline(time.Now().Add(time.Millisecond * time.Duration(zconf.GlobalObject.MaxConnWriteTime)))
-				}
-
-				//有数据要写给客户端
-				if _, err := c.GetTCPConnection().Write(data); err != nil {
-					zlog.Error("[Conn Write] Send Buff Data Error:", err, ", Conn Writer exit")
-					break
+				if err := c.Send(data); err != nil {
+					zlog.Errorf("[Conn Writer] Send error:%v", err)
 				}
 			} else {
-				zlog.Error("[Conn Write] MsgBuffChan is Closed!]")
-				break
+				zlog.Error("[Conn Write] msgBuffChan is Closed!")
 			}
-		case <-c.ctx.Done():
-			return
+			break
 		}
 	}
 }
 
 // StartReader 读消息Goroutine，用于从客户端中读取数据
 func (c *Connection) StartReader() {
-	zlog.Info("[Conn Read] Goroutine is Running!", c.GetRemoteAddr().String())
+	zlog.Info("[Conn Read] Goroutine is Running!", c.GetRemoteAddr())
 
 	defer func() {
-		zlog.Info("[Conn Read] Goroutine is Exit!", c.GetRemoteAddr().String())
+		zlog.Info("[Conn Read] Goroutine is Exit!", c.GetRemoteAddr())
 		if err := recover(); err != nil {
-			zlog.Error("[Conn Read] Goroutine is Exit Error!", c.GetRemoteAddr().String(), err)
+			zlog.Error("[Conn Read] Goroutine is Exit Error!", c.GetRemoteAddr(), err)
 		}
 		c.Stop()
 	}()
@@ -278,6 +272,25 @@ func (c *Connection) GetRemotePort() string {
 	return strings.Split(c.remoteAddr.String(), ":")[1]
 }
 
+// Send 直接将Message数据发送数据给远程的TCP客户端
+func (c *Connection) Send(data []byte) error {
+	if c.isClosed() == true {
+		return errors.New("[Conn Send] connection closed when send msg")
+	}
+
+	//写回客户端: 设置写入数据流超时时间
+	startTime := time.Now()
+	if zconf.GlobalObject.MaxConnWriteTime > 0 {
+		c.conn.SetWriteDeadline(time.Now().Add(time.Duration(zconf.GlobalObject.MaxConnWriteTime) * time.Millisecond))
+	}
+	if n, err := c.conn.Write(data); err != nil {
+		zlog.Errorf("[Conn Send] writed length:%v, raw data length:%v, time:%v, error:%v", n, len(data), time.Since(startTime).Milliseconds(), err)
+		return err
+	}
+
+	return nil
+}
+
 // SendMsg 直接将Message数据发送数据给远程的TCP客户端
 func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 	if c.isClosed() == true {
@@ -292,63 +305,52 @@ func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 		return errors.New("pack error msg")
 	}
 
-	//写回客户端: 设置写入数据流时间(100毫秒)
-	if zconf.GlobalObject.MaxConnWriteTime > 0 {
-		c.GetTCPConnection().SetWriteDeadline(time.Now().Add(time.Duration(zconf.GlobalObject.MaxConnWriteTime) * time.Millisecond))
-	}
-	_, err = c.GetTCPConnection().Write(msg)
-
-	return err
-}
-
-// SendBuffMsg 发生BuffMsg
-func (c *Connection) SendBuffMsg(msgID uint32, data []byte) error {
-	if c.isClosed() == true {
-		return errors.New("connection closed when send buff msg")
-	}
-
-	//time out
-	idleTimeout := time.NewTimer(5 * time.Millisecond)
-	defer idleTimeout.Stop()
-
-	//将data封包，并且发送
-	dp := c.GetTCPServer().Packet()
-	msg, err := dp.Pack(NewMessage(msgID, data))
-	if err != nil {
-		zlog.Error("[Conn SendBuffMsg] Pack error msg ID = ", msgID, " Err: ", err)
-		return errors.New("pack error msg")
-	}
-
-	// 发送超时
-	select {
-	case <-c.ctx.Done():
-		return errors.New("connection closed when send buff msg")
-	case <-idleTimeout.C:
-		zlog.Error("[conn SendBuffMsg] Send Buff Msg Timeout")
-		return errors.New("send buff msg timeout")
-	case c.msgBuffChan <- msg:
-		return nil
+	if err := c.Send(msg); err != nil {
+		zlog.Errorf("[Conn SendMsg] SendMsg err msg ID:%d, data:%+v, error:%+v", msgID, string(msg), err)
+		return err
 	}
 
 	return nil
 }
 
 // SendByteMsg 发生BuffMsg
-func (c *Connection) SendByteMsg(data []byte) error {
+func (c *Connection) SendByteMsg(msgID uint32, data []byte) error {
 	if c.isClosed() == true {
 		return errors.New("connection closed when send buff msg")
 	}
 
+	//将data封包，并且发送
+	dp := c.tcpServer.Packet()
+	msg, err := dp.Pack(NewMessage(msgID, data))
+	if err != nil {
+		zlog.Error("[Conn SendByteMsg] Pack error msg ID = ", msgID, " Err: ", err)
+		return errors.New("pack error msg")
+	}
+
+	if err := c.SendBuffMsg(msg); err != nil {
+		zlog.Errorf("[conn SendByteMsg] error:%v", err)
+		return err
+	}
+
+	return nil
+}
+
+// SendBuffMsg 发生BuffMsg
+func (c *Connection) SendBuffMsg(data []byte) error {
+	if c.isClosed() == true {
+		return errors.New("connection closed when send byte msg")
+	}
+
 	//time out
-	idleTimeout := time.NewTimer(5 * time.Millisecond)
+	idleTimeout := time.NewTimer(10 * time.Millisecond)
 	defer idleTimeout.Stop()
 
 	//发送超时
 	select {
 	case <-c.ctx.Done():
-		return errors.New("connection closed when send buff msg")
+		return errors.New("[conn SendBuffMsg] connection closed when send buff msg")
 	case <-idleTimeout.C:
-		zlog.Error("[conn SendByteMsg] Send Buff Msg Timeout")
+		zlog.Error("[conn SendBuffMsg] send buff msg timeout")
 		return errors.New("send buff msg timeout")
 	case c.msgBuffChan <- data:
 		return nil

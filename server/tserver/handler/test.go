@@ -28,7 +28,7 @@ func (h *TestRouter) Handle(request ziface.IRequest) error {
 	//fmt.Println("data+++++++msg.data: ", string(request.GetData()))
 
 	//request.GetConnection().SendMsg(201, []byte(`this is a test message from the server!!!`))
-	//request.GetConnection().SendBuffMsg(201, []byte(`this is a test message from the server!!!`))
+	//request.GetConnection().SendByteMsg(201, []byte(`this is a test message from the server!!!`))
 
 	tcpServer := request.GetConnection().GetTCPServer()
 	fmt.Println("server-hc::::::", tcpServer.GetHeartBeat())

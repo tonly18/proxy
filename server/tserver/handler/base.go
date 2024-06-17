@@ -41,7 +41,7 @@ func PushMessage(req ziface.IRequest, cmd, code uint32, data []byte) error {
 	if err != nil {
 		return fmt.Errorf(`base push message unpack error:%v`, err)
 	}
-	if err := req.GetConnection().SendByteMsg(msgPack); err != nil {
+	if err := req.GetConnection().SendBuffMsg(msgPack); err != nil {
 		return fmt.Errorf(`base push message conn send error:%v`, err)
 	}
 

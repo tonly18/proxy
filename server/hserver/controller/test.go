@@ -36,16 +36,16 @@ func TestController(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println("err: ", err)
 	//fmt.Println("conn: ", conn)
 
-	//conn.SendBuffMsg(20220704, []byte(`This is a message from http server!`))
+	//conn.SendByteMsg(20220704, []byte(`This is a message from http server!`))
 	//return &server.Response{
 	//	Code: 0,
 	//	Data: ,
 	//}
 
-	//if err := conn.SendByteMsg([]byte("this is a test message")); err != nil {
+	//if err := conn.SendBuffMsg([]byte("this is a test message")); err != nil {
 	//	return &server.Response{
 	//		Code: 1005,
-	//		Msg:  fmt.Errorf(`SendByteMsg is error:%v`, err),
+	//		Msg:  fmt.Errorf(`SendBuffMsg is error:%v`, err),
 	//	}
 	//}
 
