@@ -10,7 +10,6 @@ import (
 	"proxy/core/zinx/zconf"
 	"proxy/core/zinx/ziface"
 	"proxy/core/zinx/zlog"
-	"proxy/library/pool"
 	"runtime"
 	"strings"
 	"sync"
@@ -135,15 +134,15 @@ func (c *Connection) StartReader() {
 			}
 
 			//读取message head
-			msgHeadBuffer := pool.PoolGet()
+			msgHeadBuffer := pkgHeadGet()
 			if _, err := io.ReadFull(c.GetTCPConnection(), msgHeadBuffer); err != nil {
-				pool.PoolPut(msgHeadBuffer)
+				pkgHeadPut(msgHeadBuffer)
 				zlog.Errorf(`[Conn Read] Read Msg Head Error:%v, Address:%v`, err, c.GetRemoteAddr())
 				return
 			}
 			//拆包:得到datalen、cmd并放在msg中
 			msg, err := c.GetTCPServer().Packet().UnPack(msgHeadBuffer)
-			pool.PoolPut(msgHeadBuffer)
+			pkgHeadPut(msgHeadBuffer)
 			if err != nil {
 				zlog.Errorf(`[Conn Read] Unpack Error:%v, Address:%v`, err, c.GetRemoteAddr())
 				return
