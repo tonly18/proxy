@@ -14,7 +14,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -39,7 +38,7 @@ type Connection struct {
 	//保护当前property的锁
 	propertyLock sync.Mutex
 	//当前连接的关闭状态
-	closed atomic.Bool
+	//closed atomic.Bool
 	//当前链接是属于哪个Connection Manager
 	connManager ziface.IConnManager
 	//当前连接创建时Hook函数
@@ -77,7 +76,7 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64) zifa
 	}
 
 	//property
-	c.closed.Store(false)
+	//c.closed.Store(false)
 
 	//将新创建的Conn添加到链接管理中
 	c.connManager.Add(c)
@@ -392,15 +391,17 @@ func (c *Connection) finalizer() {
 	if c.connManager != nil {
 		c.connManager.Remove(c)
 	}
+	//如果用户注册了该链接的关闭回调业务,那么在此刻应该显示调用
+	c.callOnConnStop()
 
 	//如果当前链接已经关闭
-	if c.isClosed() == true {
-		return
-	}
+	//if c.isClosed() == true {
+	//	return
+	//}
 	//关闭链接
-	if c.setClose() == false {
-		return
-	}
+	//if c.setClose() == false {
+	//	return
+	//}
 
 	//停止心跳检测器
 	if c.hc != nil {
@@ -414,9 +415,6 @@ func (c *Connection) finalizer() {
 	if c.msgBuffChan != nil {
 		close(c.msgBuffChan)
 	}
-
-	//如果用户注册了该链接的关闭回调业务,那么在此刻应该显示调用
-	c.callOnConnStop()
 
 	//logger
 	zlog.Infof(`[Conn Finalizer] Conn Stop ConnID:%v, Address:%v`, c.GetConnID(), c.GetRemoteAddr())
@@ -498,10 +496,11 @@ func (c *Connection) GetHeartBeat() ziface.IHeartbeatChecker {
 
 // isClosed 链接是否已关闭
 func (c *Connection) isClosed() bool {
-	return c.closed.Load()
+	//return c.closed.Load()
+	return c.ctx.Err() != nil
 }
 
 // setClose 关闭链接
-func (c *Connection) setClose() bool {
-	return c.closed.CompareAndSwap(false, true)
-}
+//func (c *Connection) setClose() bool {
+//	return c.closed.CompareAndSwap(false, true)
+//}
