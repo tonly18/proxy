@@ -5,7 +5,6 @@ import (
 	"proxy/core/zinx/zconf"
 	"proxy/core/zinx/ziface"
 	"proxy/core/zinx/zlog"
-	"proxy/library/logger"
 	"runtime"
 )
 
@@ -41,6 +40,10 @@ func (mh *MsgHandle) SendMsgToTaskQueue(request ziface.IRequest) {
 // DoMsgHandler 马上以非阻塞方式处理消息
 func (mh *MsgHandle) DoMsgHandler(request ziface.IRequest) {
 	defer func() {
+		//执行完成后回收Request对象回对象池
+		PutRequest(request)
+
+		//recover
 		if err := recover(); err != nil {
 			zlog.Errorf("[DoMsgHandler Handler] Panic, Error(1): %v", err)
 			for i := 1; i < 20; i++ {
@@ -56,14 +59,14 @@ func (mh *MsgHandle) DoMsgHandler(request ziface.IRequest) {
 	//handler
 	handler, ok := mh.Apis[request.GetMsgID()]
 	if !ok {
-		logger.Errorf(request, `[DoMsgHandler Handler] message handler API not found, MsgID:`, request.GetMsgID())
+		zlog.Errorf(`[DoMsgHandler Handler] message handler API not found, MsgID:%v`, request.GetMsgID())
 		return
 	}
 
 	//Request请求绑定Router对应关系,并执行对应处理方法
 	request.BindRouter(handler)
 	if err := request.Call(); err != nil {
-		logger.Errorf(request, `[DoMsgHandler Handler] message id:%v, error:%v`, request.GetMsgID(), err)
+		zlog.Errorf(`[DoMsgHandler Handler] message id:%v, error:%v`, request.GetMsgID(), err)
 	}
 }
 
@@ -76,7 +79,7 @@ func (mh *MsgHandle) AddRouter(msgID uint32, router ziface.IRouter) {
 	//2 添加msg与api的绑定关系
 	mh.Apis[msgID] = router
 
-	zlog.Info("Add Api MsgID =", msgID)
+	zlog.Info("Add Api MsgID:", msgID)
 }
 
 // StartOneWorker 启动一个Worker工作流程

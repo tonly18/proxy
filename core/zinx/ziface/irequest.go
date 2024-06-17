@@ -34,12 +34,13 @@ type IRequest interface {
 	//Abort()                     //终止处理函数的运行,但调用此方法的函数会执行完毕
 
 	GetCtx() context.Context //请求上下文
+	SetAargs(string, any)
+	GetAargs(string) any
+	GetTraceId() string
+
+	//context
 	Deadline() (time.Time, bool)
 	Done() <-chan struct{}
 	Err() error
 	Value(any) any
-
-	SetAargs(string, any)
-	GetAargs(string) any
-	GetTraceId() string
 }

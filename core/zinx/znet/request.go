@@ -36,7 +36,7 @@ func NewRequest(conn ziface.IConnection, msg ziface.IMessage) ziface.IRequest {
 		steps:    PRE_HANDLE,
 		stepLock: new(sync.RWMutex),
 		traceId:  command.GenTraceID(), //初始化链路追踪ID
-		args:     make(map[string]any, 10),
+		args:     make(map[string]any, 5),
 	}
 }
 
@@ -142,11 +142,7 @@ func (r *Request) Value(key any) any {
 		if keywords == utils.TraceID {
 			return r.GetTraceId()
 		}
-		value := r.GetAargs(keywords)
-		if command.IsValueNil(value) {
-			value = r.conn.GetProperty(keywords)
-		}
-		return value
+		return r.conn.GetProperty(keywords)
 	}
 
 	return nil

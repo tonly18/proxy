@@ -164,7 +164,7 @@ func (c *Connection) StartReader() {
 			}
 
 			//Request 得到当前客户端请求的Request数据
-			req := NewRequest(c, msg)
+			req := GetRequest(c, msg)
 
 			//执行request
 			if zconf.GlobalObject.WorkerPoolSize > 0 {
