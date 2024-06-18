@@ -33,12 +33,13 @@ type IRequest interface {
 	Call() error                //转进到下一个处理器开始执行,但是调用此方法的函数会根据先后顺序逆序执行
 	//Abort()                     //终止处理函数的运行,但调用此方法的函数会执行完毕
 
-	GetCtx() context.Context //请求上下文
 	SetAargs(string, any)
 	GetAargs(string) any
 	GetTraceId() string
+	Reset()
 
 	//context
+	GetCtx() context.Context //请求上下文
 	Deadline() (time.Time, bool)
 	Done() <-chan struct{}
 	Err() error

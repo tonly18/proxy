@@ -2,7 +2,6 @@ package znet
 
 import (
 	"proxy/core/zinx/ziface"
-	"proxy/library/command"
 	"sync"
 )
 
@@ -20,20 +19,11 @@ func GetRequest(conn ziface.IConnection, msg ziface.IMessage) ziface.IRequest {
 	req := requestPool.Get().(*Request)
 	req.conn = conn
 	req.msg = msg
-	if req.router != nil {
-		req.router = nil
-	}
-	if req.steps != PRE_HANDLE {
-		req.steps = PRE_HANDLE
-	}
-	req.traceId = command.GenTraceID()
-	if len(req.args) > 0 {
-		clear(req.args)
-	}
 
 	return req
 }
 
 func PutRequest(request ziface.IRequest) {
+	request.Reset()
 	requestPool.Put(request)
 }

@@ -113,6 +113,15 @@ func (r *Request) GetTraceId() string {
 	return r.traceId
 }
 
+func (r *Request) Reset() {
+	r.conn = nil
+	r.msg = nil
+	r.router = nil
+	r.steps = PRE_HANDLE
+	r.traceId = command.GenTraceID()
+	clear(r.args)
+}
+
 // GetCtx
 func (r *Request) GetCtx() context.Context {
 	return r.conn.Context()
