@@ -279,7 +279,7 @@ func (c *Connection) Send(data []byte) error {
 		c.conn.SetWriteDeadline(time.Now().Add(time.Duration(zconf.GlobalObject.MaxConnWriteTime) * time.Millisecond))
 	}
 	if n, err := c.conn.Write(data); err != nil {
-		zlog.Errorf("[Conn Send] writed length:%v, raw data length:%v, time:%v, error:%v", n, len(data), time.Since(startTime).Milliseconds(), err)
+		zlog.Errorf("[Conn Send] writed length:%v, raw data length:%v, duration:%v, error:%v", n, len(data), time.Since(startTime).Milliseconds(), err)
 		return err
 	}
 
