@@ -168,5 +168,8 @@ func (connMgr *ConnManager) GetOnLine() int {
 
 	connMgr.connLock.Unlock()
 
+	//wait for connections exit
+	time.Sleep(time.Second * 5)
+
 	return playerCount
 }
