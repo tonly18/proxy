@@ -54,5 +54,7 @@ func (msg *MessageDown) GetData() []byte {
 	return msg.Data
 }
 func (msg *MessageDown) SetData(data []byte) {
-	msg.Data = data
+	if len(data) > 0 {
+		msg.Data = append(msg.Data, data...)
+	}
 }

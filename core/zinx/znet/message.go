@@ -1,6 +1,6 @@
 package znet
 
-// Message 消息
+// Message 消息(包结构:包长度 cmd data)
 type Message struct {
 	MsgLen uint32 //消息:包总长度
 	Cmd    uint32 //消息:cmd
@@ -38,7 +38,9 @@ func (msg *Message) SetCmd(cmd uint32) {
 
 // SetData 设置data数据
 func (msg *Message) SetData(data []byte) {
-	msg.Data = data
+	if len(data) > 0 {
+		msg.Data = append(msg.Data, data...)
+	}
 }
 
 // GetData 获取data数据

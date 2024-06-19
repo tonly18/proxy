@@ -140,6 +140,7 @@ func (c *Connection) StartReader() {
 				zlog.Errorf(`[Conn Read] Read Msg Head Error:%v, Address:%v`, err, c.GetRemoteAddr())
 				return
 			}
+
 			//拆包:得到datalen、cmd并放在msg中
 			msg, err := c.GetTCPServer().Packet().UnPack(msgHeadBuffer)
 			pkgHeadPut(msgHeadBuffer)
@@ -147,6 +148,8 @@ func (c *Connection) StartReader() {
 				zlog.Errorf(`[Conn Read] Unpack Error:%v, Address:%v`, err, c.GetRemoteAddr())
 				return
 			}
+			msg.SetData(msgHeadBuffer) //设置message head
+
 			//根据dataLen读取data,放在msg.Data中
 			if msg.GetMsgLen() > c.GetTCPServer().Packet().GetHeadLen() {
 				msgBodyBuffer := make([]byte, msg.GetMsgLen()-c.GetTCPServer().Packet().GetHeadLen())
