@@ -148,20 +148,20 @@ func (connMgr *ConnManager) GetOnLine() int {
 			}
 		}
 		for connId, conn := range connMgr.connections {
-			//登录且不存在player中的conn
 			uid := cast.ToUint64(conn.GetProperty(utils.UserID))
-			if uid > 0 {
-				if _, ok := connMgr.players[connId]; !ok {
-					delete(connMgr.connections, connId)
-					conn.Stop()
-					continue
-				}
-			}
 			//超过五分钟不活跃的conn
 			if time.Now().Sub(conn.GetActivity()) > time.Second*300 {
 				delete(connMgr.players, uid)
 				delete(connMgr.connections, connId)
 				conn.Stop()
+				continue
+			}
+			//登录且不存在player中的conn
+			if uid > 0 {
+				if _, ok := connMgr.players[connId]; !ok {
+					delete(connMgr.connections, connId)
+					conn.Stop()
+				}
 			}
 		}
 		playerCount = len(connMgr.players)
