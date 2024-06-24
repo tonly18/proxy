@@ -154,6 +154,7 @@ func (connMgr *ConnManager) GetOnLine() int {
 				if _, ok := connMgr.players[connId]; !ok {
 					delete(connMgr.connections, connId)
 					conn.Stop()
+					continue
 				}
 			}
 			//超过五分钟不活跃的conn

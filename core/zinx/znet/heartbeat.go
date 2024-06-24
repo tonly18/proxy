@@ -12,12 +12,13 @@ type HeartbeatChecker struct {
 	conn     ziface.IConnection //绑定的链接
 }
 
-//HeatBeatDefaultRouter 收到remote心跳消息的默认回调路由业务
+// HeatBeatDefaultRouter 收到remote心跳消息的默认回调路由业务
 type HeatBeatDefaultRouter struct{}
 
 func NewHeartbeatChecker(interval time.Duration) ziface.IHeartbeatChecker {
 	heartbeat := &HeartbeatChecker{
 		interval: interval,
+		quitChan: make(chan bool),
 	}
 
 	return heartbeat
@@ -63,7 +64,7 @@ func (h *HeartbeatChecker) BindConn(conn ziface.IConnection) {
 	conn.SetHeartBeat(h)
 }
 
-//Clone 克隆到一个指定的链接上
+// Clone 克隆到一个指定的链接上
 func (h *HeartbeatChecker) Clone() ziface.IHeartbeatChecker {
 	heartbeat := &HeartbeatChecker{
 		interval: h.interval,
