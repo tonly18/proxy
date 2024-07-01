@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"proxy/core/zinx/ziface"
 	"proxy/library/logger"
 	"proxy/server/global"
@@ -67,16 +66,14 @@ func (h *LoginRouter) Handle(request ziface.IRequest) error {
 	conn.SetProperty(utils.UserID, userId)                       //玩家ID
 
 	//判断玩家是否重复登录
-	fmt.Println("login===========")
 	if connOriginal, _ := conn.GetConnMgr().GetByUserId(userId); connOriginal != nil {
-		fmt.Println("login2222222===========")
 		//踢掉原connection,并推送消息给客户端
 		downMsg := pack.NewMessageDown(global.CMD_DOWN_KICK_OUT, 0, []byte("kick out"))
 		dp := pack.NewDataPackDown()
 		if downData, err := dp.Pack(downMsg); err != nil {
 			logger.Errorf(request, `[login handler] pb.pack. error:%v`, err)
 		} else {
-			if err := connOriginal.SendBuffMsg(downData); err != nil {
+			if err := connOriginal.Send(downData); err != nil {
 				logger.Errorf(request, `[login handler] connection.SendBuffMsg. error: %v`, err)
 			}
 		}
